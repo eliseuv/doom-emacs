@@ -1,0 +1,1542 @@
+#+title: DOOM Emacs Configuration
+#+author: evf
+#+property: header-args:emacs-lisp :tangle yes :comments link
+#+property: header-args :tangle no :results silent :eval no-export
+
+This is my first attempt on an Emacs literate configuration, mostly based on [[https://tecosaur.github.io/emacs-config/config.html][Tecosaur's config]].
+
+* Basic configuration
+
+** Lexical binding
+
+[[https://nullprogram.com/blog/2016/12/22/][More info]].
+
+#+begin_src emacs-lisp :comments no
+;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
+#+end_src
+
+** User info
+
+#+begin_src emacs-lisp
+(setq user-full-name "evf"
+      user-mail-address "eliseuv816@gmail.com")
+#+end_src
+
+** Better defaults
+
+#+begin_src emacs-lisp
+(setq-default
+ ;; delete-by-moving-to-trash t                      ; Delete files to trash
+ window-combination-resize t                      ; Take new window space from all other windows (not just current)
+ x-stretch-cursor t)                              ; Stretch cursor to the glyph width
+
+(setq undo-limit 80000000                         ; Raise undo-limit to 80Mb
+      evil-want-fine-undo t                       ; By default while in insert all changes are one big blob. Be more granular
+      auto-save-default t                         ; Nobody likes to loose work, I certainly don't
+      truncate-string-ellipsis "…"                ; Unicode ellispis are nicer than "...", and also save /precious/ space
+      password-cache-expiry nil                   ; I can trust my computers ... can't I?
+      ;; scroll-preserve-screen-position 'always  ; Don't have `point' jump around
+      scroll-margin 1                             ; It's nice to maintain a little margin
+      evil-kill-on-visual-paste nil)              ; Do not substitute clipboard on visual paste
+
+; Split windows vertically
+(setq split-height-threshold nil
+      split-width-threshold 0)
+
+(global-subword-mode 1)                           ; Recognize uppercase letters as word boundaries (useful for CamelCase naming)
+(global-visual-line-mode 1)                       ; Line wrapping
+#+end_src
+
+Make popups open on the right:
+
+#+begin_src emacs-lisp
+(set-popup-rules!
+  '(("^ \\*" :slot -1)
+    ("^\\*" :select t)
+    ("^\\*Completions" :slot -1 :ttl 0)
+    ("^\\*\\(?:scratch\\|Messages\\)" :ttl t)
+    ("^\\*Help" :slot -1 :size 0.2 :select t)
+    ("^\\*doom:" :size 0.3 :select t :modeline t :quit t :ttl t :side right)))
+#+end_src
+
+Open YouTube links in mpv:
+
+#+begin_src emacs-lisp
+(defun mpv-play-url (url &rest args)
+  ""
+  (interactive)
+  (start-process "mpv" nil "mpv" url))
+
+(setq browse-url-handlers
+      (quote
+       (("youtu\\.?be" . mpv-play-url)
+        ("." . eww-browse-url))))
+#+end_src
+
+
+*** Auto customization
+
+Add modifications made using the customization to a separate =custom.el= file and load it if it exists.
+
+#+begin_src emacs-lisp
+(setq-default custom-file (expand-file-name "custom.el" doom-private-dir))
+(when (file-exists-p custom-file)
+  (load custom-file))
+#+end_src
+
+*** Windows
+
+Enable vertical and horizontal splitting:
+
+#+begin_src emacs-lisp
+(setq evil-vsplit-window-right t
+      evil-split-window-below t)
+#+end_src
+
+Ask which buffer (with preview) to open when the new window is created form the split:
+
+#+begin_src emacs-lisp
+(defadvice! prompt-for-buffer (&rest _)
+  :after '(evil-window-split evil-window-vsplit)
+  (consult-buffer))
+#+end_src
+
+** DOOM configuration
+
+*** Modules
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle no
+:END:
+
+Each DOOM module install the necessary packages and apply some basic configuration.
+
+These modules are sorted in categories.
+
+#+name: init.el
+#+begin_src emacs-lisp :tangle "init.el" :noweb no-export :comments no
+;;; init.el -*- lexical-binding: t; -*-
+
+(doom!  :input
+        <<doom-input>>
+
+        :completion
+        <<doom-completion>>
+
+        :ui
+        <<doom-ui>>
+
+        :editor
+        <<doom-editor>>
+
+        :emacs
+        <<doom-emacs>>
+
+        :term
+        <<doom-term>>
+
+        :checkers
+        <<doom-checkers>>
+
+        :tools
+        <<doom-tools>>
+
+        :os
+        <<doom-os>>
+
+        :lang
+        <<doom-lang>>
+
+        :email
+        <<doom-email>>
+
+        :app
+        <<doom-app>>
+
+        :config
+        <<doom-config>>
+       )
+#+end_src
+
+**** Input
+
+#+name: doom-input
+#+begin_src emacs-lisp
+;;bidi              ; (tfel ot) thgir etirw uoy gnipleh
+;;chinese
+;;japanese
+;;layout            ; auie,ctsrnm is the superior home row
+#+end_src
+
+**** Completion
+
+#+name: doom-completion
+#+begin_src emacs-lisp
+;;(company +childframe)           ; the ultimate code completion backend
+(corfu +orderless)  ; complete with cap(f), cape and a flying feather!
+;;helm              ; the *other* search engine for love and life
+;;ido               ; the other *other* search engine...
+;;ivy               ; a search engine for love and life
+(vertico +childframe +icons)           ; the search engine of the future
+#+end_src
+
+**** UI
+
+#+name: doom-ui
+#+begin_src emacs-lisp
+;;deft              ; notational velocity for Emacs
+doom              ; what makes DOOM look the way it does
+doom-dashboard    ; a nifty splash screen for Emacs
+doom-quit         ; DOOM quit-message prompts when you quit Emacs
+;;(emoji +unicode)  ; 🙂
+hl-todo           ; highlight TODO/FIXME/NOTE/DEPRECATED/HACK/REVIEW
+;;hydra
+;;indent-guides     ; highlighted indent columns
+(ligatures +extra)        ; ligatures and symbols to make your code pretty again
+;;minimap           ; show a map of the code on the side
+modeline          ; snazzy, Atom-inspired modeline, plus API
+;;nav-flash         ; blink cursor line after big motions
+;;neotree           ; a project drawer, like NERDTree for vim
+ophints           ; highlight the region an operation acts on
+(popup +defaults)   ; tame sudden yet inevitable temporary windows
+;;tabs              ; a tab bar for Emacs
+(treemacs +lsp)          ; a project drawer, like neotree but cooler
+unicode           ; extended unicode support for various languages
+(vc-gutter +diff-hl +pretty)         ; vcs diff in the fringe
+vi-tilde-fringe   ; fringe tildes to mark beyond EOB
+(window-select +numbers +switch-window)     ; visually switch windows
+workspaces        ; tab emulation, persistence & separate workspaces
+;;zen               ; distraction-free coding or writing
+#+end_src
+
+**** Editor
+
+#+name: doom-editor
+#+begin_src emacs-lisp
+(evil +everywhere); come to the dark side, we have cookies
+file-templates    ; auto-snippets for empty files
+fold              ; (nigh) universal code folding
+(format +onsave)  ; automated prettiness
+;;god               ; run Emacs commands without modifier keys
+;;lispy             ; vim for lisp, for people who don't like vim
+multiple-cursors  ; editing in many places at once
+;;objed             ; text object editing for the innocent
+;;parinfer          ; turn lisp into python, sort of
+rotate-text       ; cycle region at point between text candidates
+snippets          ; my elves. They type so I don't have to
+;;word-wrap         ; soft wrapping with language-aware indent
+#+end_src
+
+**** Emacs
+
+#+name: doom-emacs
+#+begin_src emacs-lisp
+(dired +icons +dirvish)            ; making dired pretty [functional]
+electric          ; smarter, keyword-based electric-indent
+(ibuffer +icons)         ; interactive buffer management
+(undo +tree)              ; persistent, smarter undo for your inevitable mistakes
+vc                ; version-control and Emacs, sitting in a tree
+#+end_src
+
+**** Terminal
+
+#+name: doom-term
+#+begin_src emacs-lisp
+;;eshell            ; the elisp shell that works everywhere
+;;shell             ; simple shell REPL for Emacs
+;;term              ; basic terminal emulator for Emacs
+vterm             ; the best terminal emulation in Emacs
+#+end_src
+
+**** Checkers
+
+#+name: doom-checkers
+#+begin_src emacs-lisp
+(syntax +childframe +flymake)              ; tasing you for every semicolon you forget
+(spell +hunspell +everywhere +flyspell) ; tasing you for misspelling mispelling
+grammar           ; tasing grammar mistake every you make
+#+end_src
+
+**** Tools
+
+#+name: doom-tools
+#+begin_src emacs-lisp
+;;ansible
+biblio              ; Writes a PhD for you (citation needed)
+;;collab            ; buffers with friends
+(debugger +lsp)          ; FIXME stepping through code, to help you add bugs
+;;direnv
+(docker +lsp)
+;;editorconfig      ; let someone else argue about tabs vs spaces
+;;ein               ; tame Jupyter notebooks with emacs
+(eval +overlay)     ; run code, run (also, repls)
+(lookup             ; navigate your code and its documentation
+ +dictionary)       ; dictionary/thesaurus is nice
+(lsp +peek)         ; M-x vscode
+magit             ; a git porcelain for Emacs
+;;make              ; run make tasks from Emacs
+;; (pass +auth)        ; password manager for nerds
+pdf               ; pdf enhancements
+;;prodigy           ; FIXME managing external services & code builders
+;;terraform         ; infrastructure as code
+tmux              ; an API for interacting with tmux
+tree-sitter         ; syntax and parsing, sitting in a tree...
+upload              ; map local to remote projects via ssh/ftp
+#+end_src
+
+**** OS
+
+#+name: doom-os
+#+begin_src emacs-lisp
+(:if (featurep :system 'macos) macos)  ; improve compatibility with macOS
+;;tty               ; improve the terminal Emacs experience
+#+end_src
+
+**** Languages
+
+#+name: doom-lang
+#+begin_src emacs-lisp
+;;agda              ; types of types of types of types...
+;; (beancount +lsp)         ; mind the GAAP
+(cc +lsp +tree-sitter)           ; C > C++ == 1
+;;clojure           ; java with a lisp
+common-lisp       ; if you've seen one lisp, you've seen them all
+coq               ; proofs-as-programs
+;;crystal           ; ruby at the speed of c
+;;csharp            ; unity, .NET, and mono shenanigans
+data              ; config/data formats
+;;(dart +flutter)   ; paint ui and not much else
+;;dhall
+;;elixir            ; erlang done right
+;;elm               ; care for a cup of TEA?
+emacs-lisp        ; drown in parentheses
+;;erlang            ; an elegant language for a more civilized age
+;;ess               ; emacs speaks statistics
+;;factor
+;;faust             ; dsp, but you get to keep your soul
+;;(fortran +lsp)      ; in FORTRAN, GOD is REAL (unless declared INTEGER)
+;;fsharp            ; ML stands for Microsoft's Language
+;;fstar             ; (dependent) types and (monadic) effects and Z3
+;;gdscript          ; the language you waited for
+;;(go +lsp +tree-sitter)         ; the hipster dialect
+;;(graphql +lsp)    ; Give queries a REST
+(haskell +lsp +tree-sitter)  ; a language that's lazier than I am
+;;hy                ; readability of scheme w/ speed of python
+;;idris             ; a language you can depend on
+;;(json +lsp +tree-sitter)              ; At least it ain't XML
+;;(java +lsp)       ; the poster child for carpal tunnel syndrome
+;; (javascript +lsp +tree-sitter)        ; all(hope(abandon(ye(who(enter(here))))))
+(julia +lsp +tree-sitter +snail)             ; a better, faster MATLAB
+;;kotlin            ; a better, slicker Java(Script)
+(latex +cdlatex +fold +lsp)             ; writing papers in Emacs has never been so fun
+lean              ; for folks with too much to prove
+;;ledger            ; be audit you can be
+;;(lua +lsp +tree-sitter)               ; one-based indices? one-based indices
+;;markdown          ; writing docs for people to ignore
+;;nim               ; python + lisp at the speed of c
+(nix +lsp +tree-sitter)               ; I hereby declare "nix geht mehr!"
+(ocaml +lsp +tree-sitter)             ; an objective camel
+(org                    ; organize your plain life in plain text
+ ;;+brain               ; org-brain integration
+ ;;+contacts            ; org-contacts integration
+ +dragndrop             ; drag & drop files/images into org buffers
+ +crypt                 ; encryption and decryption on org files
+ +gnuplot               ; who doesn't like pretty pictures
+ ;;+hugo                ; use Emacs for hugo blogging
+ ;;+journal             ; org-journal integration
+ +jupyter               ; ipython/jupyter support for babel
+ +noter                 ; enhanced PDF notetaking
+ +pandoc                ; export-with-pandoc support
+ ;;+passwords           ; org-passwords integration
+ ;;+pomodoro            ; be fruitful with the tomato technique
+ +present               ; using org-mode for presentations
+ +pretty                ; pretty unicode symbols, better syntax highlighting for LaTeX
+ +roam2)                ; wander around notes
+;;php               ; perl's insecure younger brother
+;;plantuml          ; diagrams for confusing people more
+;;purescript        ; javascript, but functional
+;;(python +conda +cython +lsp +pyright +tree-sitter)            ; beautiful is better than ugly
+;;qt                ; the 'cutest' gui framework ever
+;;(racket +lsp +xp)            ; a DSL for DSLs
+;;raku              ; the artist formerly known as perl6
+;;rest              ; Emacs as a REST client
+;;rst               ; ReST in peace
+;;(ruby +rails)     ; 1.step {|i| p "Ruby is #{i.even? ? 'love' : 'life'}"}
+(rust +lsp +tree-sitter)              ; Fe2O3.unwrap().unwrap().unwrap().unwrap()
+;;scala             ; java, but good
+;;(scheme +guile)   ; a fully conniving family of lisps
+(sh +lsp +tree-sitter)                ; she sells {ba,z,fi}sh shells on the C xor
+;;sml
+;;solidity          ; do you need a blockchain? No.
+;;swift             ; who asked for emoji variables?
+;;terra             ; Earth and Moon in alignment for performance.
+;;(web +lsp +tree-sitter)               ; the tubes
+;;(yaml +lsp +tree-sitter)              ; JSON, but readable
+;;(zig +lsp +tree-sitter)               ; C, but simpler
+#+end_src
+
+**** Email
+
+#+name: doom-email
+#+begin_src emacs-lisp
+;;(mu4e +org +gmail)
+;;notmuch
+;;(wanderlust +gmail)
+#+end_src
+
+**** Applications
+
+#+name: doom-app
+#+begin_src emacs-lisp
+;;calendar
+;;emms
+;;everywhere        ; *leave* Emacs!? You must be joking
+;;irc               ; how neckbeards socialize
+(rss +org)          ; emacs as an RSS reader
+#+end_src
+
+**** Config
+
+Enable literate configuration file and DOOM defaults.
+
+#+name: doom-config
+#+begin_src emacs-lisp
+literate
+(default +bindings +smartparens)
+#+end_src
+
+*** Visual settings
+
+**** Fonts
+
+Select fonts:
+
+#+begin_src emacs-lisp
+ (setq doom-font (font-spec :family "Iosevka Nerd Font" :size 12)
+      doom-big-font (font-spec :family "Iosevka Nerd Font" :size 24)
+      doom-variable-pitch-font (font-spec :family "Alegreya" :size 13)
+      ;doom-unicode-font (font-spec :family "JuliaMono")
+      doom-serif (font-spec :family "IBM Plex Mono" :weight 'light))
+#+end_src
+
+Detect missing fonts:
+
+#+name: detect-missing-fonts
+#+begin_src emacs-lisp :tangle no
+(defvar required-fonts '("Iosevka Nerd Font" "FiraCode Nerd Font" "Symbola" "Alegreya" "IBM Plex Mono"))
+
+(defvar available-fonts
+  (delete-dups (or (font-family-list)
+                   (split-string (shell-command-to-string "fc-list : family")
+                                 "[,\n]"))))
+
+(defvar missing-fonts
+  (delq nil (mapcar
+             (lambda (font)
+               (unless (delq nil (mapcar (lambda (f)
+                                           (string-match-p (format "^%s$" font) f))
+                                         available-fonts))
+                 font))
+             required-fonts)))
+
+(if missing-fonts
+    (pp-to-string
+     `(unless noninteractive
+        (add-hook! 'doom-init-ui-hook
+          (run-at-time nil nil
+                       (lambda ()
+                         (message "%s missing the following fonts: %s"
+                                  (propertize "Warning!" 'face '(bold warning))
+                                  (mapconcat (lambda (font)
+                                               (propertize font 'face 'font-lock-variable-name-face))
+                                             ',missing-fonts
+                                             ", "))
+                         (sleep-for 0.5))))))
+  ";; No missing fonts detected")
+#+end_src
+
+#+begin_src emacs-lisp :noweb no-export
+<<detect-missing-fonts()>>
+#+end_src
+
+Change certain keywords to symbols, such as lambda (\lambda):
+
+#+begin_src emacs-lisp
+(setq global-prettify-symbols-mode t)
+#+end_src
+
+**** Theme
+
+Install =Catppuccin= theme:
+#+begin_src emacs-lisp :tangle packages.el
+(package! catppuccin-theme)
+#+end_src
+
+Select theme:
+#+begin_src emacs-lisp
+;; (setq doom-theme 'doom-vibrant)
+;; (setq doom-theme 'doom-dracula)
+;; (setq doom-theme 'doom-outrun-electric)
+(setq doom-theme 'doom-tokyo-night)
+;; (setq catppuccin-flavor 'mocha) ;; 'latte, 'frappe, 'macchiato or 'mocha
+;; (setq doom-theme 'catppuccin)
+#+end_src
+
+Allow bold and italic text:
+#+begin_src emacs-lisp
+(setq doom-themes-enable-bold t
+      doom-themes-enable-italic t)
+#+end_src
+
+**** Line numbers
+
+If set to ~t~, line numbers are enabled.
+If set to ~nil~, line numbers are disabled.
+For relative line numbers, set this to ~relative~.
+
+#+begin_src emacs-lisp
+(setq display-line-numbers-type 'relative)
+#+end_src
+
+*** Allow babel execution in CLI actions
+
+The file =$DOOMDIR/cli.el= is sourced every time a =DOOM Emacs= command line command is run.
+Here we can enable =Org Babel= evaluation.
+
+#+begin_src emacs-lisp :tangle cli.el :comments no
+;;; cli.el -*- lexical-binding: t; -*-
+(setq org-confirm-babel-evaluate nil)
+
+(defun doom-shut-up-a (orig-fn &rest args)
+  (quiet! (apply orig-fn args)))
+
+(advice-add 'org-babel-execute-src-block :around #'doom-shut-up-a)
+#+end_src
+
+*** Set info directories
+
+Info files:
+
+#+begin_src emacs-lisp
+(add-to-list 'Info-directory-list "~/.config/doom/info")
+#+end_src
+
+* Packages
+
+Packages are installed using the ~package!~ macro in =packages.el=, then running ~doom refresh~ on the command line.
+
+This file shouldn't be byte compiled.
+#+begin_src emacs-lisp :tangle "packages.el" :comments no
+;; -*- no-byte-compile: t; -*-
+#+end_src
+
+** Convenience
+
+*** Which key
+
+Make the =which-key= popup appear faster.
+
+#+begin_src emacs-lisp
+(setq which-key-idle-delay 0.5)
+#+end_src
+
+Remove the redundant =evil-= in front of the commands.
+
+#+begin_src emacs-lisp
+(setq which-key-allow-multiple-replacements t)
+(after! which-key
+  (pushnew!
+   which-key-replacement-alist
+   '(("" . "\\`+?evil[-:]?\\(?:a-\\)?\\(.*\\)") . (nil . "◂\\1"))
+   '(("\\`g s" . "\\`evilem--?motion-\\(.*\\)") . (nil . "◃\\1"))
+   ))
+#+end_src
+
+** Tools
+
+*** EVIL
+
+#+begin_quote
+From the =:editor evil= module.
+#+end_quote
+
+Some better defaults:
+
+#+begin_src emacs-lisp
+(after! evil
+  (setq evil-ex-substitute-global t     ; I like my s/../.. to by global by default
+        evil-move-cursor-back nil       ; Don't move the block cursor when toggling insert mode
+        evil-kill-on-visual-paste nil)) ; Don't put overwritten text in the kill ring
+#+end_src
+
+Prevent the installation of the package the escape EVIL mode:
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! evil-escape :disable t)
+#+end_src
+
+*** Company
+
+#+begin_quote
+From the =:completion company= module.
+#+end_quote
+
+Make completions appear faster and more often:
+
+#+begin_src emacs-lisp
+(after! company
+  (setq company-idle-delay 0.5
+        company-minimum-prefix-length 2)
+  (setq company-show-numbers t)
+  (add-hook 'evil-normal-state-entry-hook #'company-abort)) ;; make aborting less annoying.
+#+end_src
+
+Remember more from history:
+
+#+begin_src emacs-lisp
+(setq-default history-length 1000)
+(setq-default prescient-history-length 1000)
+#+end_src
+
+*** Projectile
+
+#+begin_quote
+From the =:core packages= module.
+#+end_quote
+
+Prevent projectile from adding directories simply by looking at documentation:
+
+#+begin_src emacs-lisp
+(setq projectile-ignored-projects
+      (list "~/" "/tmp" (expand-file-name "straight/repos" doom-local-dir)))
+(defun projectile-ignored-project-function (filepath)
+  "Return t if FILEPATH is within any of `projectile-ignored-projects'"
+  (or (mapcar (lambda (p) (s-starts-with-p p filepath)) projectile-ignored-projects)))
+#+end_src
+
+Where to look for projects:
+
+#+begin_src emacs-lisp
+(setq projectile-project-search-path '("~/Projects"))
+#+end_src
+
+*** Auto activating snippets
+
+Sometimes pressing =TAB= is just too much.
+#+begin_src emacs-lisp :tangle packages.el
+(package! aas :recipe (:host github :repo "ymarco/auto-activating-snippets")
+  :pin "ddc2b7a58a2234477006af348b30e970f73bc2c1")
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package! aas
+  :commands aas-mode)
+#+end_src
+
+*** YASnippet
+
+#+begin_quote
+From the =:editor snippets= module.
+#+end_quote
+
+Enable nested snippets.
+
+#+begin_src emacs-lisp
+(setq yas-triggers-in-field t)
+#+end_src
+
+*** LSP
+
+#+begin_src emacs-lisp :tangle packages.el
+;; (unpin! lsp-mode) ; there be bugs
+#+end_src
+
+#+begin_src emacs-lisp
+(after! lsp-mode
+  (setq lsp-inlay-hint-enable 't
+        lsp-auto-guess-root nil
+        lsp-eldoc-enable-hover 't
+        lsp-eldoc-render-all 't
+        lsp-idle-delay 0.3
+        lsp-log-io 't)
+  (add-hook 'lsp-mode-hook 'lsp-ui-mode))
+#+end_src
+
+#+begin_src emacs-lisp
+(after! lsp-ui
+  (setq lsp-ui-doc-mode 't
+        lsp-ui-doc-enable 't
+        lsp-ui-doc-delay 0.2
+        lsp-ui-doc-use-webkit 't
+        lsp-ui-doc-include-signature 't
+        lsp-ui-doc-header 't
+        lsp-ui-doc-include-signature 't
+        lsp-ui-sideline-mode 't
+        lsp-ui-imenu-buffer-mode 't
+        lsp-ui-imenu-enable 't))
+#+end_src
+
+*** Flycheck
+
+#+begin_src emacs-lisp
+(setq flycheck-check-syntax-automatically '(save idle-change new-line mode-enabled)
+      flycheck-idle-change-delay 0.2)
+#+end_src
+
+*** vterm
+
+Make open on the right:
+
+#+begin_src emacs-lisp
+(after! vterm
+  (set-popup-rule! "*doom:vterm-popup:main" :size 0.3 :vslot -4 :select t :quit nil :ttl 0 :side 'right))
+#+end_src
+
+** Visuals
+
+*** Info colors
+
+This makes manual pages nicer to look at:
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! info-colors :pin "2e237c301ba62f0e0286a27c1abe48c4c8441143")
+#+end_src
+
+To use this we'll just hook it into =Info=.
+
+#+begin_src emacs-lisp
+(use-package! info-colors
+  :commands (info-colors-fontify-node))
+
+(add-hook 'Info-selection-hook 'info-colors-fontify-node)
+#+end_src
+
+*** Treemacs
+
+#+begin_quote
+From the =:ui treemacs= module.
+#+end_quote
+
+Hide files with a given extension from treemacs:
+
+#+begin_src emacs-lisp
+(after! treemacs
+  (defvar treemacs-file-ignore-extensions '()
+    "File extension which `treemacs-ignore-filter' will ensure are ignored")
+  (defvar treemacs-file-ignore-globs '()
+    "Globs which will are transformed to `treemacs-file-ignore-regexps' which `treemacs-ignore-filter' will ensure are ignored")
+  (defvar treemacs-file-ignore-regexps '()
+    "RegExps to be tested to ignore files, generated from `treeemacs-file-ignore-globs'")
+  (defun treemacs-file-ignore-generate-regexps ()
+    "Generate `treemacs-file-ignore-regexps' from `treemacs-file-ignore-globs'"
+    (setq treemacs-file-ignore-regexps (mapcar 'dired-glob-regexp treemacs-file-ignore-globs)))
+  (if (equal treemacs-file-ignore-globs '()) nil (treemacs-file-ignore-generate-regexps))
+  (defun treemacs-ignore-filter (file full-path)
+    "Ignore files specified by `treemacs-file-ignore-extensions', and `treemacs-file-ignore-regexps'"
+    (or (member (file-name-extension file) treemacs-file-ignore-extensions)
+        (let ((ignore-file nil))
+          (dolist (regexp treemacs-file-ignore-regexps ignore-file)
+            (setq ignore-file (or ignore-file (if (string-match-p regexp full-path) t nil)))))))
+  (add-to-list 'treemacs-ignored-file-predicates #'treemacs-ignore-filter))
+#+end_src
+
+Extensions to be ignored:
+
+#+begin_src emacs-lisp
+(setq treemacs-file-ignore-extensions
+      '(;; LaTeX
+        "aux"
+        "ptc"
+        "fdb_latexmk"
+        "fls"
+        "synctex.gz"
+        "toc"
+        ;; LaTeX - glossary
+        "glg"
+        "glo"
+        "gls"
+        "glsdefs"
+        "ist"
+        "acn"
+        "acr"
+        "alg"
+        ;; LaTeX - pgfplots
+        "mw"
+        ;; LaTeX - pdfx
+        "pdfa.xmpi"
+        ))
+(setq treemacs-file-ignore-globs
+      '(;; LaTeX
+        "*/_minted-*"
+        ;; AucTeX
+        "*/.auctex-auto"
+        "*/_region_.log"
+        "*/_region_.tex"))
+#+end_src
+
+* Applications
+
+** Newsfeed
+
+#+begin_quote
+From the =:app rss= module.
+#+end_quote
+
+Use =elfeed= to read RSS feeds.
+
+*** Keybindings
+
+#+begin_src emacs-lisp
+(map! :map elfeed-search-mode-map
+      :after elfeed-search
+      [remap kill-this-buffer] "q"
+      [remap kill-buffer] "q"
+      :n doom-leader-key nil
+      :n "q" #'+rss/quit
+      :n "e" #'elfeed-update
+      :n "r" #'elfeed-search-untag-all-unread
+      :n "u" #'elfeed-search-tag-all-unread
+      :n "s" #'elfeed-search-live-filter
+      :n "RET" #'elfeed-search-show-entry
+      :n "p" #'elfeed-show-pdf
+      :n "+" #'elfeed-search-tag-all
+      :n "-" #'elfeed-search-untag-all
+      :n "S" #'elfeed-search-set-filter
+      :n "b" #'elfeed-search-browse-url
+      :n "y" #'elfeed-search-yank)
+(map! :map elfeed-show-mode-map
+      :after elfeed-show
+      [remap kill-this-buffer] "q"
+      [remap kill-buffer] "q"
+      :n doom-leader-key nil
+      :nm "q" #'+rss/delete-pane
+      :nm "o" #'ace-link-elfeed
+      :nm "RET" #'org-ref-elfeed-add
+      :nm "n" #'elfeed-show-next
+      :nm "N" #'elfeed-show-prev
+      :nm "p" #'elfeed-show-pdf
+      :nm "+" #'elfeed-show-tag
+      :nm "-" #'elfeed-show-untag
+      :nm "s" #'elfeed-show-new-live-search
+      :nm "y" #'elfeed-show-yank)
+#+end_src
+
+*** Usability enhancements
+
+#+begin_src emacs-lisp
+(after! elfeed-search
+  (set-evil-initial-state! 'elfeed-search-mode 'normal))
+(after! elfeed-show-mode
+  (set-evil-initial-state! 'elfeed-show-mode   'normal))
+
+(after! evil-snipe
+  (push 'elfeed-show-mode   evil-snipe-disabled-modes)
+  (push 'elfeed-search-mode evil-snipe-disabled-modes))
+#+end_src
+
+*** Visual enhancements
+
+#+begin_src emacs-lisp
+(after! elfeed
+
+  (elfeed-org)
+  (use-package! elfeed-link)
+
+  (setq elfeed-search-filter "@1-week-ago +unread"
+        elfeed-search-print-entry-function '+rss/elfeed-search-print-entry
+        elfeed-search-title-min-width 80
+        elfeed-show-entry-switch #'pop-to-buffer
+        elfeed-show-entry-delete #'+rss/delete-pane
+        elfeed-show-refresh-function #'+rss/elfeed-show-refresh--better-style
+        shr-max-image-proportion 0.6)
+
+  (add-hook! 'elfeed-show-mode-hook (hide-mode-line-mode 1))
+  (add-hook! 'elfeed-search-update-hook #'hide-mode-line-mode)
+
+  (defface elfeed-show-title-face '((t (:weight ultrabold :slant italic :height 1.5)))
+    "title face in elfeed show buffer"
+    :group 'elfeed)
+  (defface elfeed-show-author-face `((t (:weight light)))
+    "title face in elfeed show buffer"
+    :group 'elfeed)
+  (set-face-attribute 'elfeed-search-title-face nil
+                      :foreground 'nil
+                      :weight 'light)
+
+  (defadvice! +rss-elfeed-wrap-h-nicer ()
+    "Enhances an elfeed entry's readability by wrapping it to a width of
+`fill-column' and centering it with `visual-fill-column-mode'."
+    :override #'+rss-elfeed-wrap-h
+    (setq-local truncate-lines nil
+                shr-width 120
+                visual-fill-column-center-text t
+                default-text-properties '(line-height 1.1))
+    (let ((inhibit-read-only t)
+          (inhibit-modification-hooks t))
+      (visual-fill-column-mode)
+      ;; (setq-local shr-current-font '(:family "Merriweather" :height 1.2))
+      (set-buffer-modified-p nil)))
+
+  (defun +rss/elfeed-search-print-entry (entry)
+    "Print ENTRY to the buffer."
+    (let* ((elfeed-goodies/tag-column-width 40)
+           (elfeed-goodies/feed-source-column-width 30)
+           (title (or (elfeed-meta entry :title) (elfeed-entry-title entry) ""))
+           (title-faces (elfeed-search--faces (elfeed-entry-tags entry)))
+           (feed (elfeed-entry-feed entry))
+           (feed-title
+            (when feed
+              (or (elfeed-meta feed :title) (elfeed-feed-title feed))))
+           (tags (mapcar #'symbol-name (elfeed-entry-tags entry)))
+           (tags-str (concat (mapconcat 'identity tags ",")))
+           (title-width (- (window-width) elfeed-goodies/feed-source-column-width
+                           elfeed-goodies/tag-column-width 4))
+
+           (tag-column (elfeed-format-column
+                        tags-str (elfeed-clamp (length tags-str)
+                                               elfeed-goodies/tag-column-width
+                                               elfeed-goodies/tag-column-width)
+                        :left))
+           (feed-column (elfeed-format-column
+                         feed-title (elfeed-clamp elfeed-goodies/feed-source-column-width
+                                                  elfeed-goodies/feed-source-column-width
+                                                  elfeed-goodies/feed-source-column-width)
+                         :left)))
+
+      (insert (propertize feed-column 'face 'elfeed-search-feed-face) " ")
+      (insert (propertize tag-column 'face 'elfeed-search-tag-face) " ")
+      (insert (propertize title 'face title-faces 'kbd-help title))
+      (setq-local line-spacing 0.2)))
+
+  (defun +rss/elfeed-show-refresh--better-style ()
+    "Update the buffer to match the selected entry, using a mail-style."
+    (interactive)
+    (let* ((inhibit-read-only t)
+           (title (elfeed-entry-title elfeed-show-entry))
+           (date (seconds-to-time (elfeed-entry-date elfeed-show-entry)))
+           (author (elfeed-meta elfeed-show-entry :author))
+           (link (elfeed-entry-link elfeed-show-entry))
+           (tags (elfeed-entry-tags elfeed-show-entry))
+           (tagsstr (mapconcat #'symbol-name tags ", "))
+           (nicedate (format-time-string "%a, %e %b %Y %T %Z" date))
+           (content (elfeed-deref (elfeed-entry-content elfeed-show-entry)))
+           (type (elfeed-entry-content-type elfeed-show-entry))
+           (feed (elfeed-entry-feed elfeed-show-entry))
+           (feed-title (elfeed-feed-title feed))
+           (base (and feed (elfeed-compute-base (elfeed-feed-url feed)))))
+      (erase-buffer)
+      (insert "\n")
+      (insert (format "%s\n\n" (propertize title 'face 'elfeed-show-title-face)))
+      (insert (format "%s\t" (propertize feed-title 'face 'elfeed-search-feed-face)))
+      (when (and author elfeed-show-entry-author)
+        (insert (format "%s\n" (propertize author 'face 'elfeed-show-author-face))))
+      (insert (format "%s\n\n" (propertize nicedate 'face 'elfeed-log-date-face)))
+      (when tags
+        (insert (format "%s\n"
+                        (propertize tagsstr 'face 'elfeed-search-tag-face))))
+      ;; (insert (propertize "Link: " 'face 'message-header-name))
+      ;; (elfeed-insert-link link link)
+      ;; (insert "\n")
+      (cl-loop for enclosure in (elfeed-entry-enclosures elfeed-show-entry)
+               do (insert (propertize "Enclosure: " 'face 'message-header-name))
+               do (elfeed-insert-link (car enclosure))
+               do (insert "\n"))
+      (insert "\n")
+      (if content
+          (if (eq type 'html)
+              (elfeed-insert-html content base)
+            (insert content))
+        (insert (propertize "(empty)\n" 'face 'italic)))
+      (goto-char (point-min))))
+
+  )
+#+end_src
+
+*** Functionality enhancements
+
+#+begin_src emacs-lisp
+(after! elfeed-show
+  (require 'url)
+
+  (defvar elfeed-pdf-dir
+    (expand-file-name "pdfs/"
+                      (file-name-directory (directory-file-name elfeed-enclosure-default-dir))))
+
+  (defvar elfeed-link-pdfs
+    '(("https://www.jstatsoft.org/index.php/jss/article/view/v0\\([^/]+\\)" . "https://www.jstatsoft.org/index.php/jss/article/view/v0\\1/v\\1.pdf")
+      ("http://arxiv.org/abs/\\([^/]+\\)" . "https://arxiv.org/pdf/\\1.pdf"))
+    "List of alists of the form (REGEX-FOR-LINK . FORM-FOR-PDF)")
+
+  (defun elfeed-show-pdf (entry)
+    (interactive
+     (list (or elfeed-show-entry (elfeed-search-selected :ignore-region))))
+    (let ((link (elfeed-entry-link entry))
+          (feed-name (plist-get (elfeed-feed-meta (elfeed-entry-feed entry)) :title))
+          (title (elfeed-entry-title entry))
+          (file-view-function
+           (lambda (f)
+             (when elfeed-show-entry
+               (elfeed-kill-buffer))
+             (pop-to-buffer (find-file-noselect f))))
+          pdf)
+
+      (let ((file (expand-file-name
+                   (concat (subst-char-in-string ?/ ?, title) ".pdf")
+                   (expand-file-name (subst-char-in-string ?/ ?, feed-name)
+                                     elfeed-pdf-dir))))
+        (if (file-exists-p file)
+            (funcall file-view-function file)
+          (dolist (link-pdf elfeed-link-pdfs)
+            (when (and (string-match-p (car link-pdf) link)
+                       (not pdf))
+              (setq pdf (replace-regexp-in-string (car link-pdf) (cdr link-pdf) link))))
+          (if (not pdf)
+              (message "No associated PDF for entry")
+            (message "Fetching %s" pdf)
+            (unless (file-exists-p (file-name-directory file))
+              (make-directory (file-name-directory file) t))
+            (url-copy-file pdf file)
+            (funcall file-view-function file))))))
+
+  )
+#+end_src
+
+* Languages
+
+** Org-mode
+:PROPERTIES:
+:CUSTOM_ID: org
+:END:
+
+*** Basic setup
+
+#+begin_src emacs-lisp
+(setq org-directory "~/Documents/org/"                       ; Let's put files here.
+      org-agenda-files (list org-directory)                  ; Seems like the obvious place.
+      org-capture-journal-file "~/Documents/org/journal.org"
+      org-use-property-inheritance t                         ; It's convenient to have properties inherited.
+      org-log-done 'time                                     ; Having the time a item is done sounds convenient.
+      org-list-allow-alphabetical t                          ; Have a. A. a) A) list bullets.
+      org-catch-invisible-edits 'smart                       ; Try not to accidently do weird stuff in invisible regions.
+      org-export-with-sub-superscripts '{}                   ; Don't treat lone _ / ^ as sub/superscripts, require _{} / ^{}.
+      org-export-allow-bind-keywords t                       ; Bind keywords can be handy
+      org-image-actual-width '(0.9)                          ; Make the in-buffer display closer to the exported result..
+      org-hide-emphasis-markers t)
+#+end_src
+
+*** Org Modern
+
+Fontifying =org-mode= buffers to be as pretty as possible is of paramount importance,
+and Minad's lovely =org-modern= goes a long way in this regard.
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! org-modern :pin "33f694c57113418c7e739a824ff57dc9e7eb413c")
+#+end_src
+
+...with a touch of configuration...
+
+#+begin_src emacs-lisp
+(use-package! org-modern
+  :hook (org-mode . org-modern-mode)
+  :config
+  (setq org-modern-star '("◉" "○" "✸" "✿" "✤" "✜" "◆" "▶")
+        org-modern-table-vertical 1
+        org-modern-table-horizontal 0.2
+        org-modern-list '((43 . "➤")
+                          (45 . "–")
+                          (42 . "•"))
+        org-modern-todo-faces
+        '(("TODO" :inverse-video t :inherit org-todo)
+          ("PROJ" :inverse-video t :inherit +org-todo-project)
+          ("STRT" :inverse-video t :inherit +org-todo-active)
+          ("[-]"  :inverse-video t :inherit +org-todo-active)
+          ("HOLD" :inverse-video t :inherit +org-todo-onhold)
+          ("WAIT" :inverse-video t :inherit +org-todo-onhold)
+          ("[?]"  :inverse-video t :inherit +org-todo-onhold)
+          ("KILL" :inverse-video t :inherit +org-todo-cancel)
+          ("NO"   :inverse-video t :inherit +org-todo-cancel))
+        org-modern-footnote
+        (cons nil (cadr org-script-display))
+        org-modern-block-fringe nil
+        org-modern-block-name
+        '((t . t)
+          ("src" "»" "«")
+          ("example" "»–" "–«")
+          ("quote" "❝" "❞")
+          ("export" "⏩" "⏪"))
+        org-modern-progress nil
+        org-modern-priority nil
+        org-modern-horizontal-rule (make-string 36 ?─)
+        org-modern-keyword
+        '((t . t)
+          ("title" . "𝙏")
+          ("subtitle" . "𝙩")
+          ("author" . "𝘼")
+          ("email" . "")
+          ("date" . "𝘿")
+          ("property" . "󰠳")
+          ("options" . #("󰘵" 0 1 (display (height 0.75))))
+          ("startup" . "⏻")
+          ("macro" . "𝓜")
+          ("bind" . "󰌷")
+          ("bibliography" . "")
+          ("print_bibliography" . "󰌱")
+          ("cite_export" . "⮭")
+          ("print_glossary" . "󰌱ᴬᶻ")
+          ("glossary_sources" . "󰒻")
+          ("include" . "⇤")
+          ("setupfile" . "⇚")
+          ("html_head" . "🅷")
+          ("html" . "🅗")
+          ("latex_class" . "🄻")
+          ("latex_class_options" . "🄻󰒓")
+          ("latex_header" . "🅻")
+          ("latex_header_extra" . "🅻⁺")
+          ("latex" . "🅛")
+          ("beamer_theme" . "🄱")
+          ("beamer_color_theme" . "🄱󰏘")
+          ("beamer_font_theme" . "🄱𝐀")
+          ("beamer_header" . "🅱")
+          ("beamer" . "🅑")
+          ("attr_latex" . "🄛")
+          ("attr_html" . "🄗")
+          ("attr_org" . "⒪")
+          ("call" . "󰜎")
+          ("name" . "⁍")
+          ("header" . "›")
+          ("caption" . "☰")
+          ("results" . "🠶")))
+  (custom-set-faces! '(org-modern-statistics :inherit org-checkbox-statistics-todo)))
+#+end_src
+
+Since =org-modern='s tag face supplants Org's tag face, we need to adjust the
+spell-check face ignore list
+
+#+begin_src emacs-lisp
+(after! spell-fu
+  (cl-pushnew 'org-modern-tag (alist-get 'org-mode +spell-excluded-faces-alist)))
+#+end_src
+
+*** LaTeX
+
+**** Citations
+
+#+begin_quote
+Extending the =:tools biblio= module.
+#+end_quote
+
+References in Org are fairly easy now, thanks to =org-cite=. The =:tools biblio=
+module gives a fairly decent basic setup, but it would be nice to take it a bit
+further. This mostly consists of tweaking settings, but there is one extra
+package I'll grab for prettier in-buffer citations.
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! org-cite-csl-activate :recipe (:host github :repo "andras-simonyi/org-cite-csl-activate") :pin "94a424a0c644129c8ea8f9badc482ff937dcec23")
+#+end_src
+
+In particular, by setting ~org-cite-csl-activate-use-document-style~, we can have
+the in-buffer displayed citations be the same as the exported form. Isn't that lovely!
+
+Unfortunately, there's currently a potential for undesirable buffer
+modifications, so we'll put all the activation code behind a function we can
+call when we want it.
+
+#+begin_src emacs-lisp
+(use-package! oc-csl-activate
+  :after oc
+  :config
+  (setq org-cite-csl-activate-use-document-style t)
+  (defun +org-cite-csl-activate/enable ()
+    (interactive)
+    (setq org-cite-activate-processor 'csl-activate)
+    (add-hook! 'org-mode-hook '((lambda () (cursor-sensor-mode 1)) org-cite-csl-activate-render-all))
+    (defadvice! +org-cite-csl-activate-render-all-silent (orig-fn)
+      :around #'org-cite-csl-activate-render-all
+      (with-silent-modifications (funcall orig-fn)))
+    (when (eq major-mode 'org-mode)
+      (with-silent-modifications
+        (save-excursion
+          (goto-char (point-min))
+          (org-cite-activate (point-max)))
+        (org-cite-csl-activate-render-all)))
+    (fmakunbound #'+org-cite-csl-activate/enable)))
+#+end_src
+
+Now that =oc-csl-activate= is set up, let's go ahead and customise some of the
+packages already loaded. For starters, we can make use of the my Zotero files
+with =citar=, and make the symbols a bit prettier.
+
+#+begin_src emacs-lisp
+(after! citar
+  (setq org-cite-global-bibliography
+        (let ((libfile-search-names '("library.json" "Library.json" "library.bib" "Library.bib"))
+              (libfile-dir "~/Storage/Zotero")
+              paths)
+          (dolist (libfile libfile-search-names)
+            (when (and (not paths)
+                       (file-exists-p (expand-file-name libfile libfile-dir)))
+              (setq paths (list (expand-file-name libfile libfile-dir)))))
+          paths)
+        citar-bibliography org-cite-global-bibliography
+        citar-symbols
+        `((file ,(nerd-icons-faicon "nf-fa-file_o" :face 'nerd-icons-green :v-adjust -0.1) . " ")
+          (note ,(nerd-icons-octicon "nf-oct-note" :face 'nerd-icons-blue :v-adjust -0.3) . " ")
+          (link ,(nerd-icons-octicon "nf-oct-link" :face 'nerd-icons-orange :v-adjust 0.01) . " "))))
+#+end_src
+
+We can also make the Zotero CSL styles available to use.
+
+#+begin_src emacs-lisp
+(after! oc-csl
+  (setq org-cite-csl-styles-dir "~/Storage/Zotero/styles"))
+#+end_src
+
+Since CSL works so nicely everywhere, we might as well use it as the default
+citation export processor for everything.
+
+#+begin_src emacs-lisp
+(after! oc
+  (setq org-cite-export-processors '((t csl))))
+#+end_src
+
+Then, for convenience we'll cap things off by putting the citation command under
+Org's localleader.
+
+#+begin_src emacs-lisp
+(map! :after org
+      :map org-mode-map
+      :localleader
+      :desc "Insert citation" "@" #'org-cite-insert)
+#+end_src
+
+Lastly, just in case I come across any old citations of mine, I think it would
+be nice to have a function to convert =org-ref= citations to =org-cite= forms.
+
+#+begin_src emacs-lisp
+(after! oc
+  (defun org-ref-to-org-cite ()
+    "Attempt to convert org-ref citations to org-cite syntax."
+    (interactive)
+    (let* ((cite-conversions '(("cite" . "//b") ("Cite" . "//bc")
+                               ("nocite" . "/n")
+                               ("citep" . "") ("citep*" . "//f")
+                               ("parencite" . "") ("Parencite" . "//c")
+                               ("citeauthor" . "/a/f") ("citeauthor*" . "/a")
+                               ("citeyear" . "/na/b")
+                               ("Citep" . "//c") ("Citealp" . "//bc")
+                               ("Citeauthor" . "/a/cf") ("Citeauthor*" . "/a/c")
+                               ("autocite" . "") ("Autocite" . "//c")
+                               ("notecite" . "/l/b") ("Notecite" . "/l/bc")
+                               ("pnotecite" . "/l") ("Pnotecite" . "/l/bc")))
+           (cite-regexp (rx (regexp (regexp-opt (mapcar #'car cite-conversions) t))
+                            ":" (group (+ (not (any "\n 	,.)]}")))))))
+      (save-excursion
+        (goto-char (point-min))
+        (while (re-search-forward cite-regexp nil t)
+          (message (format "[cite%s:@%s]"
+                                 (cdr (assoc (match-string 1) cite-conversions))
+                                 (match-string 2)))
+          (replace-match (format "[cite%s:@%s]"
+                                 (cdr (assoc (match-string 1) cite-conversions))
+                                 (match-string 2))))))))
+#+end_src
+
+****** Citar
+
+Use =Zotero= library:
+
+#+begin_src emacs-lisp
+(after! citar
+  (setq org-cite-global-bibliography '("~/Storage/Zotero/my_library.bib"))
+  (setq bibtex-completion-bibliography '("~/Storage/Zotero/my_library.bib"))
+  (setq citar-bibliography '("~/Storage/Zotero/my_library.bib"))
+  (setq citar-library-paths '("~/Storage/Zotero/storage/"))
+  (setq citar-citeproc-csl-styles-dir (expand-file-name "~/Storage/Zotero/styles"))
+  (setq citar-citeproc-csl-style "american-physics-society.csl")
+  citar-symbols
+        `((file ,(nerd-icons-faicon "nf-fa-file_o" :face 'nerd-icons-green :v-adjust -0.1) . " ")
+          (note ,(nerd-icons-octicon "nf-oct-note" :face 'nerd-icons-blue :v-adjust -0.3) . " ")
+          (link ,(nerd-icons-octicon "nf-oct-link" :face 'nerd-icons-orange :v-adjust 0.01) . " ")))
+#+end_src
+
+Import CSL citation styles and bibliography from =Zotero=:
+
+#+begin_src emacs-lisp
+(after! oc-csl
+  (setq org-cite-csl-styles-dir (expand-file-name "~/Storage/Zotero/styles")
+        org-cite-csl--fallback-style-file "american-physics-society.csl"))
+#+end_src
+
+Citation command under Org's localleader:
+
+#+begin_src emacs-lisp
+(map! :after org
+      :map org-mode-map
+      :localleader
+      :desc "Insert citation" "@" #'org-cite-insert)
+#+end_src
+
+Function that attempts to convert =org-ref= citations to =org-cite= forms:
+
+#+begin_src emacs-lisp
+(after! oc
+  (defun org-ref-to-org-cite ()
+    "Attempt to convert org-ref citations to org-cite syntax."
+    (interactive)
+    (let* ((cite-conversions '(("cite" . "//b") ("Cite" . "//bc")
+                               ("nocite" . "/n")
+                               ("citep" . "") ("citep*" . "//f")
+                               ("parencite" . "") ("Parencite" . "//c")
+                               ("citeauthor" . "/a/f") ("citeauthor*" . "/a")
+                               ("citeyear" . "/na/b")
+                               ("Citep" . "//c") ("Citealp" . "//bc")
+                               ("Citeauthor" . "/a/cf") ("Citeauthor*" . "/a/c")
+                               ("autocite" . "") ("Autocite" . "//c")
+                               ("notecite" . "/l/b") ("Notecite" . "/l/bc")
+                               ("pnotecite" . "/l") ("Pnotecite" . "/l/bc")))
+           (cite-regexp (rx (regexp (regexp-opt (mapcar #'car cite-conversions) t))
+                            ":" (group (+ (not (any "\n 	,.)]}")))))))
+      (save-excursion
+        (goto-char (point-min))
+        (while (re-search-forward cite-regexp nil t)
+          (message (format "[cite%s:@%s]"
+                                 (cdr (assoc (match-string 1) cite-conversions))
+                                 (match-string 2)))
+          (replace-match (format "[cite%s:@%s]"
+                                 (cdr (assoc (match-string 1) cite-conversions))
+                                 (match-string 2))))))))
+#+end_src
+
+*** Roam
+
+Basic configuration
+
+#+begin_src emacs-lisp
+(setq org-roam-directory "~/Documents/org/roam/"
+      org-roam-complete-everywhere t
+      org-roam-capture-templates
+      '(("d" "default" plain
+         (file "~/Documents/org/roam/templates/default.org")
+         :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+TITLE: ${title}\n#+DATE: %U\n#+FILETAGS: \n\n")
+         :unnarrowed t)
+        ("b" "bibliography" plain
+         (file "~/Documents/org/roam/templates/bibliography.org")
+         :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+TITLE: ${title}\n#+DATE: %U\n#+FILETAGS: biblio\n\n")
+         :unnarrowed t))
+      )
+#+end_src
+
+If the directory doesn't exist we don't want to use roam.
+
+#+begin_src emacs-lisp :noweb-ref none :tangle (if (file-exists-p "~/Documents/org/roam/") "no" "packages.el")
+(package! org-roam :disable t)
+#+end_src
+
+Nicer file names in window titles:
+
+#+begin_src emacs-lisp
+(defadvice! doom-modeline--buffer-file-name-roam-aware-a (orig-fun)
+  :around #'doom-modeline-buffer-file-name ; takes no args
+  (if (s-contains-p org-roam-directory (or buffer-file-name ""))
+      (replace-regexp-in-string
+       "\\(?:^\\|.*/\\)\\([0-9]\\{4\\}\\)\\([0-9]\\{2\\}\\)\\([0-9]\\{2\\}\\)[0-9]*-"
+       "🢔(\\1-\\2-\\3) "
+       (subst-char-in-string ?_ ?  buffer-file-name))
+    (funcall orig-fun)))
+#+end_src
+
+**** Org Roam UI
+
+Use the latest version of =Org Roam=:
+
+#+begin_src emacs-lisp :tangle no
+(unpin! org-roam)
+#+end_src
+
+Install =Org Roam UI=
+
+#+begin_src emacs-lisp :tangle no
+(package! org-roam-ui)
+#+end_src
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! org-roam-ui :recipe (:host github :repo "org-roam/org-roam-ui" :files ("*.el" "out")) :pin "5ac74960231db0bf7783c2ba7a19a60f582e91ab")
+(package! websocket :pin "40c208eaab99999d7c1e4bea883648da24c03be3") ; dependency of `org-roam-ui'
+#+end_src
+
+Install dependencies:
+
+#+begin_src emacs-lisp
+(use-package! websocket
+  :after org-roam)
+#+end_src
+
+Configure package =Org Roam UI=:
+
+#+begin_src emacs-lisp
+(use-package! org-roam-ui
+  :after org-roam
+  :commands org-roam-ui-open
+  :hook (org-roam . org-roam-ui-mode)
+  :config
+  (require 'org-roam) ; in case autoloaded
+  (setq org-roam-ui-sync-theme t
+        org-roam-ui-follow t
+        org-roam-ui-update-on-save t
+        org-roam-ui-open-on-start t
+        org-roam-ui-browser-function #'browse-url-xdg-open)
+  (defun org-roam-ui-open ()
+    "Ensure the server is active, then open the roam graph."
+    (interactive)
+    (unless org-roam-ui-mode (org-roam-ui-mode 1))
+    (browse-url-xdg-open (format "http://localhost:%d" org-roam-ui-port))))
+#+end_src
+
+** LaTeX
+
+#+begin_src emacs-lisp
+(setq TeX-command-default "LaTeXMk")
+#+end_src
+
+** Typst
+
+#+begin_src emacs-lisp :tangle no
+(add-to-list 'treesit-language-source-alist
+             '(typst "https://github.com/uben0/tree-sitter-typst"))
+(treesit-install-language-grammar 'typst)
+#+end_src
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! typst-ts-mode :recipe
+  (:type git
+   :host sourcehut
+   :repo "meow_king/typst-ts-mode"
+   :files (:defaults "*.el")))
+#+end_src
+
+#+begin_src emacs-lisp
+(after! typst-ts-mode
+  ;; don't add "--open" if you'd like `watch` to be an error detector
+  (setq typst-ts-mode-watch-options "--open"
+  ;; experimental settings (I'm the main dev, so I enable these)
+        typst-ts-mode-enable-raw-blocks-highlight t
+        typst-ts-mode-highlight-raw-blocks-at-startup t)
+  )
+#+end_src
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! org-typst-preview :recipe
+  (:type git
+   :host github
+   :repo "remimimimimi/org-typst-preview.el"
+   :files ("org-typst-preview.el")))
+#+end_src
+
+
+** Rust
+
+#+begin_src emacs-lisp
+(after! lsp-mode
+  (setq lsp-rust-analyzer-server-display-inlay-hints 't)
+  (setq lsp-rust-analyzer-display-parameter-hints 't)
+  (setq lsp-rust-analyzer-display-chaining-hints 't)
+  (setq lsp-rust-analyzer-closure-capture-hints 't)
+  (setq lsp-rust-analyzer-display-closure-return-type-hints 't)
+  (setq lsp-rust-analyzer-binding-mode-hints 't)
+  (setq lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names 't)
+  (setq lsp-rust-analyzer-display-closure-return-type-hints 't)
+  (setq lsp-rust-analyzer-display-parameter-hints 't)
+  (setq lsp-rust-analyzer-display-reborrow-hints 't)
+  (setq lsp-rust-analyzer-cargo-watch-command "clippy")
+  (setq lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial")
+  (setq lsp-rust-analyzer-discriminants-hints "fieldless")
+  (setq lsp-rust-analyzer-expression-adjustment-hints "reborrow")
+  (setq lsp-rust-analyzer-closure-return-type-hints "with_block"))
+#+end_src
+
+
+Use =Justfile= mode.
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! just-mode)
+#+end_src
+
+** Julia
+
+If using =lsp-julia=:
+
+#+begin_src emacs-lisp
+;; Do not use built-in package
+(setq lsp-julia-package-dir nil)
+;; Select Julia environment
+(setq lsp-julia-default-environment "~/.julia/environments/emacs-lsp")
+#+end_src
+
+If using =eglot=:
+
+#+begin_src emacs-lisp :tangle no
+(setq eglot-connect-timeout 600)
+(setq eglot-jl-language-server-project "~/.julia/environments/emacs-lsp")
+(after! eglot-jl
+  (setq eglot-jl-language-server-project eglot-jl-base))
+#+end_src
+
+*** Julia REPL
+
+#+begin_src emacs-lisp
+(after! julia-repl
+  ;; Use vterm
+  (julia-repl-set-terminal-backend 'vterm)
+  ;; Open REPL at the right side
+  (set-popup-rule! "*julia:\*" :side 'right :size 0.3 :ttl 0 :quit nil :select nil)
+  ;; Set environment variables
+  (setenv "JULIA_NUM_THREADS" "auto"))
+#+end_src
+
+*** Julia vterm
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! julia-vterm)
+#+end_src
+
+Activate =julia-vterm= minor mode in =julia-mode=.
+
+#+begin_src emacs-lisp :tangle no
+(add-hook 'julia-mode-hook #'julia-vterm-mode)
+#+end_src
+
+*** TODO Julia-snail
+
+# Install =Julia Snail=:
+
+# #+begin_src emacs-lisp :tangle packages.el
+# (package! julia-snail)
+# #+end_src
+
+
+# #+begin_src emacs-lisp
+# (use-package! julia-snail
+#   :ensure t
+#   :hook (julia-mode . julia-snail-mode))
+# #+end_src
+
+
+** Lean
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! lean4-mode :recipe
+  (:host github
+   :repo "leanprover/lean4-mode"
+   :files ("*.el" "data")))
+#+end_src
+
+
+** uiua
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! uiua-ts-mode)
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package! uiua-ts-mode
+  :mode "\\.ua//'")
+#+end_src

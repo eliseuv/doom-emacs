@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: doxygen_file_header
+# key: \doxyfile
+# --
+/**
+ * @file `(file-name-nondirectory (buffer-file-name))`
+ *
+ * @brief ${1:Brief description}
+ *
+ * ${2:Detailed description}
+ *
+ * @author ${3:evf (eliseuv816@gmail.com)}
+ * @date `(format-time-string "%Y-%m-%d")`
+ */

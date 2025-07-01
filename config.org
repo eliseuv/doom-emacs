@@ -1029,7 +1029,7 @@ Fontifying =org-mode= buffers to be as pretty as possible is of paramount import
 and Minad's lovely =org-modern= goes a long way in this regard.
 
 #+begin_src emacs-lisp :tangle packages.el
-(package! org-modern :pin "33f694c57113418c7e739a824ff57dc9e7eb413c")
+(package! org-modern :pin "a58534475b4312b0920aa9d3824272470c8e3500")
 #+end_src
 
 ...with a touch of configuration...

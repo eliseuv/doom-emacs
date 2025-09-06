@@ -36,7 +36,7 @@ This is my first attempt on an Emacs literate configuration, mostly based on [[h
       truncate-string-ellipsis "…"                ; Unicode ellispis are nicer than "...", and also save /precious/ space
       password-cache-expiry nil                   ; I can trust my computers ... can't I?
       ;; scroll-preserve-screen-position 'always  ; Don't have `point' jump around
-      scroll-margin 1                             ; It's nice to maintain a little margin
+      scroll-margin 0
       evil-kill-on-visual-paste nil)              ; Do not substitute clipboard on visual paste
 
 ; Split windows vertically

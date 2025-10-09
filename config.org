@@ -695,6 +695,20 @@ Make open on the right:
   (set-popup-rule! "*doom:vterm-popup:main" :size 0.3 :vslot -4 :select t :quit nil :ttl 0 :side 'right))
 #+end_src
 
+** GPTel
+
+Use Gemini as =gptel= backend:
+
+#+begin_src emacs-lisp
+(use-package! gptel
+  :config
+  (setq
+   gptel-model 'gemini-2.5-pro
+   gptel-backend (gptel-make-gemini "Gemini"
+                   :key (getenv "GEMINI_API_KEY")
+                   :stream t)))
+#+end_src
+
 ** Visuals
 
 *** Info colors

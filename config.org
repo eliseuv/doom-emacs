@@ -520,7 +520,8 @@ Here we can enable =Org Babel= evaluation.
 Info files:
 
 #+begin_src emacs-lisp
-(add-to-list 'Info-directory-list "~/.config/doom/info")
+(eval-after-load 'info
+  '(add-to-list 'Info-directory-list "~/.config/doom/info"))
 #+end_src
 
 * Packages

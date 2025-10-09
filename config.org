@@ -1435,7 +1435,6 @@ Configure package =Org Roam UI=:
    :files ("org-typst-preview.el")))
 #+end_src
 
-
 ** Rust
 
 #+begin_src emacs-lisp
@@ -1523,7 +1522,6 @@ Activate =julia-vterm= minor mode in =julia-mode=.
 #   :hook (julia-mode . julia-snail-mode))
 # #+end_src
 
-
 ** Lean
 
 #+begin_src emacs-lisp :tangle packages.el
@@ -1532,7 +1530,6 @@ Activate =julia-vterm= minor mode in =julia-mode=.
    :repo "leanprover/lean4-mode"
    :files ("*.el" "data")))
 #+end_src
-
 
 ** uiua
 

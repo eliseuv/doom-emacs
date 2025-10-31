@@ -1411,6 +1411,12 @@ Configure package =Org Roam UI=:
 
 ** LaTeX
 
+Select default PDF viewer
+
+#+begin_src emacs-lisp
+(setq +latex-viewers '(zathura pdf-tools))
+#+end_src
+
 #+begin_src emacs-lisp
 (setq TeX-command-default "LaTeXMk")
 #+end_src

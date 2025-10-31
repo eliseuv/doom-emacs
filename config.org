@@ -1417,6 +1417,13 @@ Select default PDF viewer
 (setq +latex-viewers '(zathura pdf-tools))
 #+end_src
 
+Use cdlatex snippets
+
+#+begin_src emacs-lisp
+(map! :map cdlatex-mode-map
+      :i "TAB" #'cdlatex-tab)
+#+end_src
+
 #+begin_src emacs-lisp
 (setq TeX-command-default "LaTeXMk")
 #+end_src

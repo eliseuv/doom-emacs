@@ -1477,6 +1477,19 @@ Use cdlatex snippets
 (setq TeX-command-default "LaTeXMk")
 #+end_src
 
+Compile without prompting to save first, keep the compilation buffer around,
+and pass =-shell-escape= (needed for packages like =minted= and
+=tikz-externalize=; only enable this if you trust the =.tex= files you compile,
+since it lets LaTeX run arbitrary shell commands).
+
+#+begin_src emacs-lisp
+(setq TeX-save-query nil
+      TeX-show-compilation t
+      TeX-command-extra-options "-shell-escape")
+(after! latex
+  (add-to-list 'TeX-command-list '("XeLaTeX" "%`xelatex%(mode)%' %t" TeX-run-TeX nil t)))
+#+end_src
+
 ** Typst
 
 #+begin_src emacs-lisp :tangle no

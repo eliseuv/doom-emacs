@@ -1657,6 +1657,19 @@ Activate =julia-vterm= minor mode in =julia-mode=.
   :mode "\\.ua\\'")
 #+end_src
 
+No lsp-mode client ships for uiua; register one against the =uiua lsp=
+subcommand, mirroring the empty-config server entry in the nvim setup:
+
+#+begin_src emacs-lisp
+(after! lsp-mode
+  (lsp-register-client
+   (make-lsp-client
+    :new-connection (lsp-stdio-connection '("uiua" "lsp"))
+    :major-modes '(uiua-ts-mode)
+    :server-id 'uiua-lsp)))
+(add-hook 'uiua-ts-mode-hook #'lsp-deferred)
+#+end_src
+
 ** Python
 
 Use =basedpyright= instead of vanilla =pyright=:

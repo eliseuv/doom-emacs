@@ -624,7 +624,7 @@ Prevent projectile from adding directories simply by looking at documentation:
       (list "~/" "/tmp" (expand-file-name "straight/repos" doom-local-dir)))
 (defun projectile-ignored-project-function (filepath)
   "Return t if FILEPATH is within any of `projectile-ignored-projects'"
-  (cl-some (lambda (p) (s-starts-with-p p filepath)) projectile-ignored-projects))
+  (cl-some (lambda (p) (string-prefix-p p filepath)) projectile-ignored-projects))
 #+end_src
 
 Where to look for projects:
@@ -1364,7 +1364,7 @@ Nicer file names in window titles:
 #+begin_src emacs-lisp
 (defadvice! doom-modeline--buffer-file-name-roam-aware-a (orig-fun)
   :around #'doom-modeline-buffer-file-name ; takes no args
-  (if (s-contains-p org-roam-directory (or buffer-file-name ""))
+  (if (string-match-p (regexp-quote org-roam-directory) (or buffer-file-name ""))
       (replace-regexp-in-string
        "\\(?:^\\|.*/\\)\\([0-9]\\{4\\}\\)\\([0-9]\\{2\\}\\)\\([0-9]\\{2\\}\\)[0-9]*-"
        "🢔(\\1-\\2-\\3) "

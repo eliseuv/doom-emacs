@@ -747,6 +747,22 @@ Make open on the right:
   (set-popup-rule! "*doom:vterm-popup:main" :size 0.3 :vslot -4 :select t :quit nil :ttl 0 :side 'right))
 #+end_src
 
+*** Git
+
+Inline blame annotation on the current line, VS Code GitLens-style
+(complements the fringe diffs from =vc-gutter +diff-hl=):
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! blamer)
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package! blamer
+  :commands blamer-mode
+  :init
+  (map! :leader :desc "Toggle inline git blame" "t B" #'blamer-mode))
+#+end_src
+
 ** GPTel
 
 Use Gemini as =gptel= backend:

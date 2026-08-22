@@ -102,6 +102,30 @@ Ask which buffer (with preview) to open when the new window is created form the 
   (consult-buffer))
 #+end_src
 
+Window rotation lives under =SPC w r= and =SPC w R=, but /layout/ rotation is
+handy too. The =rotate= package adds =rotate-layout= for this; bind it to
+=SPC w SPC=, and fill in the missing arrow-key variants of window
+navigation/swapping.
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! rotate :pin "4e9ac3ff800880bd9b705794ef0f7c99d72900a6")
+#+end_src
+
+#+begin_src emacs-lisp
+(map! :map evil-window-map
+      "SPC" #'rotate-layout
+      ;; Navigation
+      "<left>"     #'evil-window-left
+      "<down>"     #'evil-window-down
+      "<up>"       #'evil-window-up
+      "<right>"    #'evil-window-right
+      ;; Swapping windows
+      "C-<left>"       #'+evil/window-move-left
+      "C-<down>"       #'+evil/window-move-down
+      "C-<up>"         #'+evil/window-move-up
+      "C-<right>"      #'+evil/window-move-right)
+#+end_src
+
 ** DOOM configuration
 
 *** Modules

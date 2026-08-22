@@ -1030,7 +1030,7 @@ Use =elfeed= to read RSS feeds.
 #+begin_src emacs-lisp
 (setq org-directory "~/Documents/org/"                       ; Let's put files here.
       org-agenda-files (list org-directory)                  ; Seems like the obvious place.
-      org-capture-journal-file "~/Documents/org/journal.org"
+      +org-capture-journal-file "~/Documents/org/journal.org"
       org-use-property-inheritance t                         ; It's convenient to have properties inherited.
       org-log-done 'time                                     ; Having the time a item is done sounds convenient.
       org-list-allow-alphabetical t                          ; Have a. A. a) A) list bullets.

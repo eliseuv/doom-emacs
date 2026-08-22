@@ -614,7 +614,7 @@ Prevent projectile from adding directories simply by looking at documentation:
       (list "~/" "/tmp" (expand-file-name "straight/repos" doom-local-dir)))
 (defun projectile-ignored-project-function (filepath)
   "Return t if FILEPATH is within any of `projectile-ignored-projects'"
-  (or (mapcar (lambda (p) (s-starts-with-p p filepath)) projectile-ignored-projects)))
+  (cl-some (lambda (p) (s-starts-with-p p filepath)) projectile-ignored-projects))
 #+end_src
 
 Where to look for projects:

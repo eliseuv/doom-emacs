@@ -1350,15 +1350,11 @@ Nicer file names in window titles:
 
 Use the latest version of =Org Roam=:
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle packages.el
 (unpin! org-roam)
 #+end_src
 
-Install =Org Roam UI=
-
-#+begin_src emacs-lisp :tangle no
-(package! org-roam-ui)
-#+end_src
+Install =Org Roam UI=:
 
 #+begin_src emacs-lisp :tangle packages.el
 (package! org-roam-ui :recipe (:host github :repo "org-roam/org-roam-ui" :files ("*.el" "out")) :pin "5ac74960231db0bf7783c2ba7a19a60f582e91ab")

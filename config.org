@@ -1524,6 +1524,12 @@ since it lets LaTeX run arbitrary shell commands).
    :files ("org-typst-preview.el")))
 #+end_src
 
+lsp-mode ships a =tinymist= client (=lsp-typst.el=); nothing triggers it yet:
+
+#+begin_src emacs-lisp
+(add-hook 'typst-ts-mode-hook #'lsp-deferred)
+#+end_src
+
 ** Rust
 
 #+begin_src emacs-lisp

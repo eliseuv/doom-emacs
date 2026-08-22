@@ -717,7 +717,8 @@ Use Gemini as =gptel= backend:
    gptel-model 'gemini-2.5-pro
    gptel-backend (gptel-make-gemini "Gemini"
                    :key (lambda () (getenv "GEMINI_API_KEY"))
-                   :stream t)))
+                   :stream t)
+   gptel-default-mode #'org-mode))
 #+end_src
 
 ** Visuals

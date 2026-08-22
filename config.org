@@ -63,7 +63,6 @@ Open YouTube links in mpv:
 
 #+begin_src emacs-lisp
 (defun mpv-play-url (url &rest args)
-  ""
   (interactive)
   (start-process "mpv" nil "mpv" url))
 

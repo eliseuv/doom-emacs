@@ -764,6 +764,22 @@ Use Gemini as =gptel= backend:
 
 ** Visuals
 
+*** Sticky context
+
+Show the enclosing function/class in a posframe while scrolling, like
+=nvim-treesitter-context=. Not on MELPA; pull from upstream directly.
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! treesitter-context :recipe
+  (:host github
+   :repo "zbelial/treesitter-context.el"))
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package! treesitter-context
+  :hook (prog-mode . treesitter-context-mode))
+#+end_src
+
 *** Info colors
 
 This makes manual pages nicer to look at:

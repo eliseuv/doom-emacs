@@ -252,8 +252,8 @@ vterm             ; the best terminal emulation in Emacs
 
 #+name: doom-checkers
 #+begin_src emacs-lisp
-(syntax +childframe +flymake)              ; tasing you for every semicolon you forget
-(spell +hunspell +everywhere +flyspell) ; tasing you for misspelling mispelling
+(syntax +childframe)              ; tasing you for every semicolon you forget
+(spell +hunspell +everywhere) ; tasing you for misspelling mispelling
 grammar           ; tasing grammar mistake every you make
 #+end_src
 
@@ -273,7 +273,7 @@ direnv
 (lookup             ; navigate your code and its documentation
  +dictionary)       ; dictionary/thesaurus is nice
 llm                 ; when I said you needed friends, I didn't mean...
-(lsp +eglot +peek)         ; M-x vscode
+(lsp +peek)         ; M-x vscode
 magit             ; a git porcelain for Emacs
 ;;make              ; run make tasks from Emacs
 ;; (pass +auth)        ; password manager for nerds

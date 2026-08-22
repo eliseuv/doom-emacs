@@ -75,6 +75,16 @@ Open YouTube links in mpv:
 #+end_src
 
 
+** Frame sizing
+
+New frames default to a somewhat arbitrary size; pick something more
+reasonable.
+
+#+begin_src emacs-lisp
+(add-to-list 'default-frame-alist '(height . 24))
+(add-to-list 'default-frame-alist '(width . 80))
+#+end_src
+
 ** Auto customization
 
 Add modifications made using the customization to a separate =custom.el= file and load it if it exists.
@@ -124,6 +134,36 @@ navigation/swapping.
       "C-<down>"       #'+evil/window-move-down
       "C-<up>"         #'+evil/window-move-up
       "C-<right>"      #'+evil/window-move-right)
+#+end_src
+
+** Hippie expand
+
+~hippie-expand~ is a nicer swap-in upgrade for ~dabbrev-expand~.
+
+#+begin_src emacs-lisp
+(global-set-key [remap dabbrev-expand] #'hippie-expand)
+#+end_src
+
+By default it tries, in order: file names, abbreviations, list expansion,
+previous lines, dabbrev (this buffer, then all buffers, then kill ring), and
+elisp symbols. ~try-expand-line~ tends to fire when a dabbrev completion is
+actually wanted, so push it down; prioritise the dabbrev-family expanders
+instead, including ~try-expand-dabbrev-visible~ which isn't tried by default.
+
+#+begin_src emacs-lisp
+(setq hippie-expand-try-functions-list
+      '(try-expand-list
+        try-expand-dabbrev-visible
+        try-expand-dabbrev
+        try-expand-all-abbrevs
+        try-expand-dabbrev-all-buffers
+        try-complete-file-name-partially
+        try-complete-file-name
+        try-expand-dabbrev-from-kill
+        try-expand-whole-kill
+        try-expand-line
+        try-complete-lisp-symbol-partially
+        try-complete-lisp-symbol))
 #+end_src
 
 ** DOOM configuration

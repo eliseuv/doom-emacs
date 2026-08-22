@@ -778,6 +778,26 @@ Use Gemini as =gptel= backend:
    gptel-default-mode #'org-mode))
 #+end_src
 
+** Claude Code
+
+Run the =Claude Code= CLI in a vterm popup:
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! claude-code :recipe
+  (:host github
+   :repo "stevemolitor/claude-code.el"
+   :files ("*.el")))
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package! claude-code
+  :init
+  (map! :leader :desc "Claude Code" "o c" #'claude-code-toggle)
+  :config
+  (setq claude-code-terminal-backend 'vterm)
+  (claude-code-mode))
+#+end_src
+
 ** Visuals
 
 *** Sticky context

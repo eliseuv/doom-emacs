@@ -1566,5 +1566,5 @@ Activate =julia-vterm= minor mode in =julia-mode=.
 
 #+begin_src emacs-lisp
 (use-package! uiua-ts-mode
-  :mode "\\.ua//'")
+  :mode "\\.ua\\'")
 #+end_src

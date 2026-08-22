@@ -1634,9 +1634,10 @@ Highlight the =julia>= REPL prompt when writing REPL examples in =julia-mode=
 buffers:
 
 #+begin_src emacs-lisp
-(add-to-list
- 'julia-font-lock-keywords
- '("^julia>" 0 '(font-lock-string-face bold) prepend))
+(after! julia-mode
+  (add-to-list
+   'julia-font-lock-keywords
+   '("^julia>" 0 '(font-lock-string-face bold) prepend)))
 #+end_src
 
 =rainbow-delimiters= is nice to have here, and =lsp-mode= is known to choke on

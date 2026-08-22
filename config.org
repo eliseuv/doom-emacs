@@ -454,8 +454,9 @@ Detect missing fonts:
 
 (defvar available-fonts
   (delete-dups (or (font-family-list)
-                   (split-string (shell-command-to-string "fc-list : family")
-                                 "[,\n]"))))
+                   (and (executable-find "fc-list")
+                        (split-string (shell-command-to-string "fc-list : family")
+                                      "[,\n]")))))
 
 (defvar missing-fonts
   (delq nil (mapcar

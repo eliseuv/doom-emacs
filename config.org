@@ -26,7 +26,7 @@ This is my first attempt on an Emacs literate configuration, mostly based on [[h
 
 #+begin_src emacs-lisp
 (setq-default
- ;; delete-by-moving-to-trash t                      ; Delete files to trash
+ delete-by-moving-to-trash t                      ; Delete files to trash
  window-combination-resize t                      ; Take new window space from all other windows (not just current)
  x-stretch-cursor t)                              ; Stretch cursor to the glyph width
 
@@ -37,12 +37,14 @@ This is my first attempt on an Emacs literate configuration, mostly based on [[h
       password-cache-expiry nil                   ; I can trust my computers ... can't I?
       ;; scroll-preserve-screen-position 'always  ; Don't have `point' jump around
       scroll-margin 0
+      display-time-default-load-average nil       ; Load average isn't useful in the modeline clock
       evil-kill-on-visual-paste nil)              ; Do not substitute clipboard on visual paste
 
 ; Split windows vertically
 (setq split-height-threshold nil
       split-width-threshold 0)
 
+(display-time-mode 1)                             ; Show the time in the modeline
 (global-subword-mode 1)                           ; Recognize uppercase letters as word boundaries (useful for CamelCase naming)
 (global-visual-line-mode 1)                       ; Line wrapping
 #+end_src

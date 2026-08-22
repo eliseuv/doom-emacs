@@ -464,7 +464,7 @@ Detect missing fonts:
 Change certain keywords to symbols, such as lambda (\lambda):
 
 #+begin_src emacs-lisp
-(setq global-prettify-symbols-mode t)
+(global-prettify-symbols-mode 1)
 #+end_src
 
 **** Theme

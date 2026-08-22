@@ -74,7 +74,7 @@ Open YouTube links in mpv:
 #+end_src
 
 
-*** Auto customization
+** Auto customization
 
 Add modifications made using the customization to a separate =custom.el= file and load it if it exists.
 
@@ -84,7 +84,7 @@ Add modifications made using the customization to a separate =custom.el= file an
   (load custom-file))
 #+end_src
 
-*** Windows
+** Windows
 
 Enable vertical and horizontal splitting:
 

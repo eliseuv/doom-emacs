@@ -1572,6 +1572,26 @@ If using =eglot=:
   (setq eglot-jl-language-server-project eglot-jl-base))
 #+end_src
 
+Highlight the =julia>= REPL prompt when writing REPL examples in =julia-mode=
+buffers:
+
+#+begin_src emacs-lisp
+(add-to-list
+ 'julia-font-lock-keywords
+ '("^julia>" 0 '(font-lock-string-face bold) prepend))
+#+end_src
+
+=rainbow-delimiters= is nice to have here, and =lsp-mode= is known to choke on
+folding responses from the Julia language server ([[https://github.com/non-Jedi/lsp-julia/issues/35][lsp-julia#35]]); cap the
+folding range as a workaround.
+
+#+begin_src emacs-lisp
+(add-hook 'julia-mode-hook #'rainbow-delimiters-mode-enable)
+(add-hook! 'julia-mode-hook
+  (setq-local lsp-enable-folding t
+              lsp-folding-range-limit 100))
+#+end_src
+
 *** Julia REPL
 
 #+begin_src emacs-lisp

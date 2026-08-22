@@ -1530,7 +1530,7 @@ If using =eglot=:
 
 Activate =julia-vterm= minor mode in =julia-mode=.
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (add-hook 'julia-mode-hook #'julia-vterm-mode)
 #+end_src
 

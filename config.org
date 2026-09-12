@@ -418,7 +418,7 @@ emacs-lisp        ; drown in parentheses
  ;;+pomodoro            ; be fruitful with the tomato technique
  +present               ; using org-mode for presentations
  +pretty                ; pretty unicode symbols, better syntax highlighting for LaTeX
- +roam2)                ; wander around notes
+ +roam)                 ; wander around notes
 ;;php               ; perl's insecure younger brother
 ;;plantuml          ; diagrams for confusing people more
 ;;graphviz          ; diagrams for confusing yourself even more

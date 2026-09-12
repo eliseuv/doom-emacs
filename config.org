@@ -1551,7 +1551,13 @@ since it lets LaTeX run arbitrary shell commands).
 #+end_src
 
 #+begin_src emacs-lisp :tangle packages.el
-(package! typst-ts-mode :recipe
+;; Disabled: upstream typst-ts-compile.el has a stray ;;;###autoload cookie
+;; on a `define-compilation-mode' form (a macro, not a function), which
+;; loaddefs-generate copies verbatim into the autoloads file. On Emacs 31
+;; that file is loaded before `compile' is required, so the macro is void
+;; and `doom sync' fails. Re-enable once upstream fixes it or the recipe
+;; points at a patched fork.
+(package! typst-ts-mode :disable t :recipe
   (:type git
    :host sourcehut
    :repo "meow_king/typst-ts-mode"

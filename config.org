@@ -396,7 +396,7 @@ emacs-lisp        ; drown in parentheses
 (julia +lsp +tree-sitter +snail)             ; a better, faster MATLAB
 ;;kotlin            ; a better, slicker Java(Script)
 (latex +latexmk +cdlatex +fold +lsp)             ; writing papers in Emacs has never been so fun
-lean              ; for folks with too much to prove
+(lean +lsp)       ; for folks with too much to prove
 ;;ledger            ; be audit you can be
 ;;(lua +lsp +tree-sitter)               ; one-based indices? one-based indices
 (markdown +grip +tree-sitter)          ; writing docs for people to ignore
@@ -1689,15 +1689,6 @@ Activate =julia-vterm= minor mode in =julia-mode=.
 #   :ensure t
 #   :hook (julia-mode . julia-snail-mode))
 # #+end_src
-
-** Lean
-
-#+begin_src emacs-lisp :tangle packages.el
-(package! lean4-mode :recipe
-  (:host github
-   :repo "leanprover/lean4-mode"
-   :files ("*.el" "data")))
-#+end_src
 
 ** uiua
 

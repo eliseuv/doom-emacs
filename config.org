@@ -480,8 +480,8 @@ literate
 Select fonts:
 
 #+begin_src emacs-lisp
-(setq doom-font (font-spec :family "Iosevka Term Nerd Font" :size 12)
-      doom-big-font (font-spec :family "Iosevka Term Nerd Font" :size 24)
+(setq doom-font (font-spec :family "IosevkaTerm Nerd Font" :size 12)
+      doom-big-font (font-spec :family "IosevkaTerm Nerd Font" :size 24)
       doom-variable-pitch-font (font-spec :family "Alegreya" :size 13)
       ;doom-unicode-font (font-spec :family "JuliaMono")
       doom-serif-font (font-spec :family "IBM Plex Mono" :weight 'light))
@@ -491,7 +491,7 @@ Detect missing fonts:
 
 #+name: detect-missing-fonts
 #+begin_src emacs-lisp :tangle no
-(defvar required-fonts '("Iosevka Term Nerd Font" "Symbola" "Alegreya" "IBM Plex Mono"))
+(defvar required-fonts '("IosevkaTerm Nerd Font" "Symbola" "Alegreya" "IBM Plex Mono"))
 
 (defvar available-fonts
   (delete-dups (or (font-family-list)

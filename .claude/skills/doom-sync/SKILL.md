@@ -1,14 +1,18 @@
 ---
 name: doom-sync
-description: Update Doom Emacs, then audit this literate Doom config against the installed Doom modules and against Tecosaur's config - find redundant, conflicting and outdated settings, sections that drifted from Tecosaur's, and features of his worth adopting - and apply only what the user approves, one commit per change. Use when the user wants to update, upgrade or sync Doom, compare the config with Tecosaur's, prune redundant settings, or clean up the Doom config.
+description: Compare this literate Doom config with upstream Doom master (modules, flags, obsolete symbols, templates), update Doom, then audit it against the installed Doom modules and against Tecosaur's config - find redundant, conflicting and outdated settings, sections that drifted from Tecosaur's, and features of his worth adopting - and apply only what the user approves, one commit per change. Use when the user wants to update, upgrade or sync Doom, compare the config with Tecosaur's, prune redundant settings, or clean up the Doom config.
 ---
 
 # doom-sync
 
 Run from `~/.config/doom`. References, never edited:
 
-- `DOOM=~/.config/emacs` — the doom-emacs checkout (`bin/doom`, `modules/`, `lisp/`, `static/`).
+- `DOOM=~/.config/emacs` — the doom-emacs checkout (`bin/doom`, `lisp/`, `static/`).
+  Modules live in `MODS=$DOOM/sources/doom+/modules` since upstream split them
+  into `doomemacs/modules` (a submodule of `doomemacs/core`); older checkouts
+  have them in `MODS=$DOOM/modules`. Use whichever exists.
 - `T=~/Projects/third-party/tecosaur/emacs-config` — Tecosaur's config; `$T/config.org` is it.
+- `SCRATCH` — the session scratchpad (any writable path outside both repos).
 
 The config is literate (`:config literate`): `config.org` is the only source.
 `init.el`, `config.el` and `packages.el` are tangled from it and gitignored —
@@ -32,9 +36,39 @@ rev: <full hash of $T reviewed last>
   `doom sync` wipes `$DOOM/.local` and breaks every check below. Wait or stop.
 - `OLD=$(git -C "$DOOM" rev-parse HEAD)`.
 - Baselines, saved to scratch: `doom doctor` output, and the startup check
-  from step 9. Pre-existing warnings are findings, not regressions.
+  from step 10. Pre-existing warnings are findings, not regressions.
 
-## 2. Update Doom
+## 2. Compare with upstream Doom master
+
+Before updating, compare against upstream master itself
+(`github.com/doomemacs/core`, `static/` and its `sources/doom+` modules), not
+the local checkout — this shows what the upgrade will break, and it works when
+the local checkout is far behind or the upgrade later fails:
+
+```sh
+bash .claude/skills/doom-sync/upstream-check.sh "$SCRATCH"   # bash, not zsh: it relies on word splitting
+```
+
+It shallow-clones upstream into `$SCRATCH/doom-upstream` (only read, never
+run) and prints:
+
+- `MISSING-MODULE` / `UNKNOWN-FLAG` — `init.el` modules and flags that don't
+  exist in upstream's module tree (renamed, deprecated or removed). Confirm
+  each against the module's `README.org` "Module flags" section before
+  reporting: a flag only referenced in `doctor.el` is effectively gone.
+- `OBSOLETE` — symbols upstream marks obsolete (`declare (obsolete …)`,
+  `make-obsolete*`, `define-obsolete-*`, including the `:doom compat` shims)
+  that `config.org` still uses, with the upstream definition. Commented-out
+  uses are low-priority cleanup.
+- A diff of `static/{init,config,packages}.example.el` between the local
+  checkout and upstream — new modules, changed file headers and idioms.
+
+All of it feeds the **Outdated** category in step 7. A `MISSING-MODULE`
+would make `doom sync` fail once the update lands, so ask about those before
+step 3 and apply the approved replacements first (verify and commit them as in
+steps 10–11).
+
+## 3. Update Doom
 
 ```sh
 "$DOOM/bin/doom" upgrade      # git pull + doom sync -u; takes minutes
@@ -49,7 +83,7 @@ tree-sitter grammars (`libtree-sitter-*`); every `+tree-sitter` language then
 prompts on first open. If `find "$DOOM/.local" -name 'libtree-sitter-*'` is
 empty, report it and ask before installing them — it downloads and compiles.
 
-## 3. Upstream Doom changes (`OLD..NEW`, skip if equal)
+## 4. Upstream Doom changes (`OLD..NEW`, skip if equal)
 
 Doom has no changelog; read the history.
 
@@ -57,11 +91,12 @@ Doom has no changelog; read the history.
   `type!:` commit and every commit with `BREAKING CHANGE` in its body.
 - `git -C "$DOOM" diff OLD..NEW -- static/init.example.el` — added, removed
   and renamed modules and flags.
-- `git -C "$DOOM" diff OLD..NEW -G 'make-obsolete|define-obsolete' -- lisp modules`.
+- `git -C "$DOOM" diff OLD..NEW -G 'make-obsolete|define-obsolete' -- lisp modules sources`
+  (`--submodule=diff` to see inside `sources/doom+`).
 - Deprecation and "removed flag" lines in the new `doom doctor` output (this
   is how `+roam2 → +roam` surfaced).
 
-## 4. Update Tecosaur
+## 5. Update Tecosaur
 
 ```sh
 git -C "$T" pull --ff-only
@@ -71,9 +106,9 @@ git -C "$T" diff "$REV"..HEAD -- config.org
 ```
 
 If the pull fails (network, diverged), report it and audit against the local
-checkout as is. With no `REV`, there is no diff: do the full mapping in step 6.
+checkout as is. With no `REV`, there is no diff: do the full mapping in step 7.
 
-## 5. Local config
+## 6. Local config
 
 - `config.org` by heading (`grep -n '^\*' config.org`). Module selection is
   the `init.el` block and its `doom-<category>` noweb blocks; `package!` lines
@@ -84,11 +119,11 @@ checkout as is. With no `REV`, there is no diff: do the full mapping in step 6.
   (e.g. typst-ts-mode disabled, python without `+conda`). Don't re-flag them
   unless an upstream change makes them break or unnecessary.
 
-## 6. Classify
+## 7. Classify
 
 Read the actual source; don't rely on memory of Doom or of Tecosaur's config.
 Every finding carries: `config.org:line`, category, the proving path
-(`$DOOM/modules/<cat>/<mod>/{config,packages}.el:line` or `$T/config.org:line`),
+(`$MODS/<cat>/<mod>/{config,packages}.el:line` or `$T/config.org:line`),
 the proposed change, and risk.
 
 - **Redundant** — `setq`/`after!`/`map!`/`package!` that an enabled module
@@ -98,8 +133,9 @@ the proposed change, and risk.
   completion frontends for one mode, a package disabled in one place and
   configured in another, keybindings shadowing a module's without evident
   intent, `custom.el` values contradicting `config.org`.
-- **Outdated** — modules, flags, variables, functions or macros removed,
-  renamed or obsoleted in `OLD..NEW` or flagged by the startup check (obsolete
+- **Outdated** — everything step 2 printed; modules, flags, variables,
+  functions or macros removed, renamed or obsoleted in `OLD..NEW`, or flagged by
+  the startup check (obsolete
   macro warnings from `config.el` map back to `config.org` through the
   `:comments link` markers); `unpin!`/workarounds whose upstream reason is gone.
 - **Tecosaur: drifted** — sections already shared with him (matched by heading
@@ -114,7 +150,7 @@ the proposed change, and risk.
   substance, not his `confpkg` wrappers. Rank by value; prefer self-contained
   items.
 
-## 7. Ask — always with `AskUserQuestion`
+## 8. Ask — always with `AskUserQuestion`
 
 Never ask "should I…?" in free text. First print a short grouped summary
 (counts per category, top items), then:
@@ -135,7 +171,7 @@ Declined adoptions go into `## Declined` (with the reason if the user gave
 one, via Other/notes). Declined redundant/conflicting/outdated findings are
 intentional deviations: leave them and don't re-propose them this session.
 
-## 8. Apply
+## 9. Apply
 
 - Minimal edit per approved finding, in `config.org` only; don't touch
   unrelated sections. Adoptions go under the heading mirroring Tecosaur's
@@ -148,7 +184,7 @@ intentional deviations: leave them and don't re-propose them this session.
   the Nix change via `AskUserQuestion`; never rely on a package downloading it.
 - Comments only for non-obvious decisions.
 
-## 9. Verify each change before committing
+## 10. Verify each change before committing
 
 ```sh
 "$DOOM/bin/doom" sync        # tangles config.org; must exit 0
@@ -188,7 +224,7 @@ If the daemon still stops answering, kill it by PID —
 If verification fails, fix or revert that change and report it — never commit
 a failing change.
 
-## 10. Commit
+## 11. Commit
 
 One commit per logical change, directly on `main`, matching `git log` style:
 `fix(config): …` for redundant/conflicting/outdated, `sync(config): …` for

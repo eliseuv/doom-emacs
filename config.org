@@ -1265,28 +1265,6 @@ call when we want it.
     (fmakunbound #'+org-cite-csl-activate/enable)))
 #+end_src
 
-Now that =oc-csl-activate= is set up, let's go ahead and customise some of the
-packages already loaded. For starters, we can make use of the my Zotero files
-with =citar=, and make the symbols a bit prettier.
-
-#+begin_src emacs-lisp
-(after! citar
-  (setq org-cite-global-bibliography
-        (let ((libfile-search-names '("library.json" "Library.json" "library.bib" "Library.bib"))
-              (libfile-dir "~/Storage/Zotero")
-              paths)
-          (dolist (libfile libfile-search-names)
-            (when (and (not paths)
-                       (file-exists-p (expand-file-name libfile libfile-dir)))
-              (setq paths (list (expand-file-name libfile libfile-dir)))))
-          paths)
-        citar-bibliography org-cite-global-bibliography
-        citar-symbols
-        `((file ,(nerd-icons-faicon "nf-fa-file_o" :face 'nerd-icons-green :v-adjust -0.1) . " ")
-          (note ,(nerd-icons-octicon "nf-oct-note" :face 'nerd-icons-blue :v-adjust -0.3) . " ")
-          (link ,(nerd-icons-octicon "nf-oct-link" :face 'nerd-icons-orange :v-adjust 0.01) . " "))))
-#+end_src
-
 Since CSL works so nicely everywhere, we might as well use it as the default
 citation export processor for everything.
 

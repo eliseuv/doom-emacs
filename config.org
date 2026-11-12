@@ -1393,6 +1393,17 @@ Import CSL citation styles and bibliography from =Zotero=:
         org-cite-csl--fallback-style-file "american-physics-society.csl"))
 #+end_src
 
+**** cdlatex environments
+
+After inserting an environment with ~org-cdlatex-environment-indent~
+(=C-c }=), it almost always needs editing, so open it right away.
+
+#+begin_src emacs-lisp
+(defadvice! +org-edit-latex-env-after-insert-a (&rest _)
+  :after #'org-cdlatex-environment-indent
+  (org-edit-latex-environment))
+#+end_src
+
 *** Roam
 
 Basic configuration

@@ -102,17 +102,13 @@ Ask which buffer (with preview) to open when the new window is created form the 
 #+end_src
 
 Window rotation lives under =SPC w r= and =SPC w R=, but /layout/ rotation is
-handy too. The =rotate= package adds =rotate-layout= for this; bind it to
-=SPC w SPC=, and fill in the missing arrow-key variants of window
+handy too. Since Emacs 31 it's built in as ~window-layout-rotate-clockwise~;
+bind it to =SPC w SPC=, and fill in the missing arrow-key variants of window
 navigation/swapping.
-
-#+begin_src emacs-lisp :tangle packages.el
-(package! rotate :pin "4e9ac3ff800880bd9b705794ef0f7c99d72900a6")
-#+end_src
 
 #+begin_src emacs-lisp
 (map! :map evil-window-map
-      "SPC" #'rotate-layout
+      "SPC" #'window-layout-rotate-clockwise
       ;; Navigation
       "<left>"     #'evil-window-left
       "<down>"     #'evil-window-down

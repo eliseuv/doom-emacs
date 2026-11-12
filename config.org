@@ -1196,6 +1196,7 @@ and Minad's lovely =org-modern= goes a long way in this regard.
           ("setupfile" . "⇚")
           ("html_head" . "🅷")
           ("html" . "🅗")
+          ("accent_color" . "")
           ("latex_class" . "🄻")
           ("latex_class_options" . "🄻󰒓")
           ("latex_header" . "🅻")

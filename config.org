@@ -1226,6 +1226,27 @@ spell-check face ignore list
   (cl-pushnew 'org-modern-tag (alist-get 'org-mode +spell-excluded-faces-alist)))
 #+end_src
 
+**** Emphasis markers
+
+With ~org-hide-emphasis-markers~ on, edits at the border of emphasis are
+fiddly. =org-appear= shows the markers only while point is inside.
+
+#+begin_src emacs-lisp :tangle packages.el
+(package! org-appear :recipe (:host github :repo "awth13/org-appear")
+  :pin "32ee50f8fdfa449bbc235617549c1bccb503cb09")
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package! org-appear
+  :hook (org-mode . org-appear-mode)
+  :config
+  (setq org-appear-autoemphasis t
+        org-appear-autosubmarkers t
+        org-appear-autolinks nil)
+  ;; `org-appear--set-elements' must run after other org-mode hooks.
+  (run-at-time nil nil #'org-appear--set-elements))
+#+end_src
+
 *** LaTeX
 
 **** Citations

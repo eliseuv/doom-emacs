@@ -652,9 +652,18 @@ Prevent projectile from adding directories simply by looking at documentation:
 #+begin_src emacs-lisp
 (setq projectile-ignored-projects
       (list "~/" "/tmp" (expand-file-name "straight/repos" doom-local-dir)))
-(defun projectile-ignored-project-function (filepath)
-  "Return t if FILEPATH is within any of `projectile-ignored-projects'"
-  (cl-some (lambda (p) (string-prefix-p p filepath)) projectile-ignored-projects))
+#+end_src
+
+Projectile only matches that list exactly, so also ignore anything /inside/
+=/tmp= or Doom's package repos. =~/= stays an exact match: as a prefix it would
+swallow every project under home.
+
+#+begin_src emacs-lisp
+(defun +projectile-ignored-project-p (project-root)
+  "Return t if PROJECT-ROOT is inside /tmp or Doom's straight repos."
+  (cl-some (lambda (dir) (file-in-directory-p project-root dir))
+           (list "/tmp" (expand-file-name "straight/repos" doom-local-dir))))
+(setq projectile-ignored-project-function #'+projectile-ignored-project-p)
 #+end_src
 
 Where to look for projects:

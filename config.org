@@ -701,8 +701,7 @@ Enable nested snippets.
         lsp-auto-guess-root nil
         lsp-eldoc-enable-hover 't
         lsp-eldoc-render-all 't
-        lsp-idle-delay 0.3
-        lsp-log-io 't))
+        lsp-idle-delay 0.3))
 #+end_src
 
 #+begin_src emacs-lisp

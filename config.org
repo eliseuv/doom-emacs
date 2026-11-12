@@ -85,16 +85,6 @@ reasonable.
 (add-to-list 'default-frame-alist '(width . 80))
 #+end_src
 
-** Auto customization
-
-Add modifications made using the customization to a separate =custom.el= file and load it if it exists.
-
-#+begin_src emacs-lisp
-(setq custom-file (expand-file-name "custom.el" doom-user-dir))
-(when (file-exists-p custom-file)
-  (load custom-file))
-#+end_src
-
 ** Windows
 
 Enable vertical and horizontal splitting:

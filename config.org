@@ -604,11 +604,10 @@ Remove the redundant =evil-= in front of the commands.
 #+begin_src emacs-lisp
 (setq which-key-allow-multiple-replacements t)
 (after! which-key
-  (pushnew!
-   which-key-replacement-alist
-   '(("" . "\\`+?evil[-:]?\\(?:a-\\)?\\(.*\\)") . (nil . "◂\\1"))
-   '(("\\`g s" . "\\`evilem--?motion-\\(.*\\)") . (nil . "◃\\1"))
-   ))
+  (dolist (replacement
+           '((("" . "\\`+?evil[-:]?\\(?:a-\\)?\\(.*\\)") . (nil . "◂\\1"))
+             (("\\`g s" . "\\`evilem--?motion-\\(.*\\)") . (nil . "◃\\1"))))
+    (cl-pushnew replacement which-key-replacement-alist :test #'equal)))
 #+end_src
 
 ** Tools

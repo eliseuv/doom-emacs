@@ -121,6 +121,27 @@ navigation/swapping.
       "C-<right>"      #'+evil/window-move-right)
 #+end_src
 
+*** Window title
+
+Show the buffer name, then the project (=◉= once modified, =●= otherwise). Roam
+files drop their timestamp prefix and show as =☰ title=.
+
+#+begin_src emacs-lisp
+(setq frame-title-format
+      '(""
+        (:eval
+         (if (string-match-p (regexp-quote (or (bound-and-true-p org-roam-directory) "\u0000"))
+                             (or buffer-file-name ""))
+             (replace-regexp-in-string
+              ".*/[0-9]*-?" "☰ "
+              (subst-char-in-string ?_ ?\s buffer-file-name))
+           "%b"))
+        (:eval
+         (when-let* ((project-name (and (featurep 'projectile) (projectile-project-name))))
+           (unless (string= "-" project-name)
+             (format (if (buffer-modified-p)  " ◉ %s" "  ●  %s") project-name))))))
+#+end_src
+
 ** Hippie expand
 
 ~hippie-expand~ is a nicer swap-in upgrade for ~dabbrev-expand~.

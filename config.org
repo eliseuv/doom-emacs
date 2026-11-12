@@ -151,6 +151,35 @@ instead, including ~try-expand-dabbrev-visible~ which isn't tried by default.
         try-complete-lisp-symbol))
 #+end_src
 
+Mid-line expansions can repeat a suffix that already follows point
+(=bar(int x,| int z)= → =bar(int x, int y, int z) int z)=). Strip the longest
+suffix of the expansion that is also a prefix of the rest of the line, by
+filtering the arguments of ~he-substitute-string~, which does the insertion.
+
+#+begin_src emacs-lisp
+(defun +he-subst-suffix-overlap (ins rem)
+  "The longest suffix of the string INS that is a prefix of REM."
+  (let ((len (min (length ins) (length rem))))
+    (while (and (> len 0)
+                (not (eq 't (compare-strings ins (- len) nil rem 0 len))))
+      (setq len (1- len)))
+    len))
+
+(defun +he-suffix-strip-a (args)
+  "Filter ARGS of `he-substitute-string', truncating a duplicated suffix."
+  (pcase-let* ((`(,ins &optional ,trans-case) args)
+               (rem (save-excursion
+                      (goto-char (marker-position he-string-end))
+                      (buffer-substring-no-properties
+                       (point) (line-end-position))))
+               (ov (+he-subst-suffix-overlap ins rem)))
+    (when (>= ov 0)
+      (setq ins (substring ins 0 (- (length ins) ov))))
+    (list ins trans-case)))
+
+(advice-add #'he-substitute-string :filter-args #'+he-suffix-strip-a)
+#+end_src
+
 ** DOOM configuration
 
 *** Modules

@@ -707,15 +707,10 @@ Enable nested snippets.
 
 #+begin_src emacs-lisp
 (after! lsp-ui
-  (setq lsp-ui-doc-mode 't
-        lsp-ui-doc-enable 't
+  (setq lsp-ui-doc-enable 't
         lsp-ui-doc-delay 0.2
-        lsp-ui-doc-use-webkit 't
         lsp-ui-doc-include-signature 't
         lsp-ui-doc-header 't
-        lsp-ui-doc-include-signature 't
-        lsp-ui-sideline-mode 't
-        lsp-ui-imenu-buffer-mode 't
         lsp-ui-imenu-enable 't))
 #+end_src
 

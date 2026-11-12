@@ -1295,13 +1295,6 @@ with =citar=, and make the symbols a bit prettier.
           (link ,(nerd-icons-octicon "nf-oct-link" :face 'nerd-icons-orange :v-adjust 0.01) . " "))))
 #+end_src
 
-We can also make the Zotero CSL styles available to use.
-
-#+begin_src emacs-lisp
-(after! oc-csl
-  (setq org-cite-csl-styles-dir "~/Storage/Zotero/styles"))
-#+end_src
-
 Since CSL works so nicely everywhere, we might as well use it as the default
 citation export processor for everything.
 
@@ -1376,46 +1369,6 @@ Import CSL citation styles and bibliography from =Zotero=:
 (after! oc-csl
   (setq org-cite-csl-styles-dir (expand-file-name "~/Storage/Zotero/styles")
         org-cite-csl--fallback-style-file "american-physics-society.csl"))
-#+end_src
-
-Citation command under Org's localleader:
-
-#+begin_src emacs-lisp
-(map! :after org
-      :map org-mode-map
-      :localleader
-      :desc "Insert citation" "@" #'org-cite-insert)
-#+end_src
-
-Function that attempts to convert =org-ref= citations to =org-cite= forms:
-
-#+begin_src emacs-lisp
-(after! oc
-  (defun org-ref-to-org-cite ()
-    "Attempt to convert org-ref citations to org-cite syntax."
-    (interactive)
-    (let* ((cite-conversions '(("cite" . "//b") ("Cite" . "//bc")
-                               ("nocite" . "/n")
-                               ("citep" . "") ("citep*" . "//f")
-                               ("parencite" . "") ("Parencite" . "//c")
-                               ("citeauthor" . "/a/f") ("citeauthor*" . "/a")
-                               ("citeyear" . "/na/b")
-                               ("Citep" . "//c") ("Citealp" . "//bc")
-                               ("Citeauthor" . "/a/cf") ("Citeauthor*" . "/a/c")
-                               ("autocite" . "") ("Autocite" . "//c")
-                               ("notecite" . "/l/b") ("Notecite" . "/l/bc")
-                               ("pnotecite" . "/l") ("Pnotecite" . "/l/bc")))
-           (cite-regexp (rx (regexp (regexp-opt (mapcar #'car cite-conversions) t))
-                            ":" (group (+ (not (any "\n 	,.)]}")))))))
-      (save-excursion
-        (goto-char (point-min))
-        (while (re-search-forward cite-regexp nil t)
-          (message (format "[cite%s:@%s]"
-                                 (cdr (assoc (match-string 1) cite-conversions))
-                                 (match-string 2)))
-          (replace-match (format "[cite%s:@%s]"
-                                 (cdr (assoc (match-string 1) cite-conversions))
-                                 (match-string 2))))))))
 #+end_src
 
 *** Roam

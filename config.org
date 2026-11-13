@@ -1815,3 +1815,27 @@ Use built-in =asm-mode=; lsp-mode's bundled =asm-lsp= client activates on it.
 (add-to-list 'auto-mode-alist '("\\.s\\'" . asm-mode))
 (add-hook 'asm-mode-hook #'lsp-deferred)
 #+end_src
+
+** Lean
+
+The Lean server sends =workspace/inlayHint/refresh= even though lsp-mode
+advertises no refresh support, and lsp-mode has no handler for it, so each one
+lands in =*Warnings*= and the hints stay stale until the next scroll or edit.
+Handle it on the =nael= client by re-requesting hints for every window showing
+one of the workspace's buffers.
+
+#+begin_src emacs-lisp
+(after! nael-lsp
+  (when-let* ((nael-client (gethash 'nael lsp-clients)))
+    (puthash "workspace/inlayHint/refresh"
+             (lambda (workspace _params)
+               (dolist (buffer (lsp--workspace-buffers workspace))
+                 (when (lsp-buffer-live-p buffer)
+                   (lsp-with-current-buffer buffer
+                     (when (bound-and-true-p lsp-inlay-hints-mode)
+                       (dolist (window (get-buffer-window-list nil nil t))
+                         (lsp-update-inlay-hints (window-start window)
+                                                 (window-end window t)))))))
+               nil)
+             (lsp--client-request-handlers nael-client))))
+#+end_src
